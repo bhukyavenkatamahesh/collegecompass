@@ -1,3 +1,44 @@
+# Node / JavaScript
+node_modules/
+.next/
+out/
+dist/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*~
+
+# macOS
+.DS_Store
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build / cache
+build/
+.cache/
+coverage/
+.nyc_output/
+
+# Databases
+dev.db
+
+# Data files (raw/large data)
+data/raw/
+data/*.xlsx
+data/*.pdf
+
+# Python
+__pycache__/
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
