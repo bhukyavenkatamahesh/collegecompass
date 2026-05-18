@@ -4,7 +4,18 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 const CATEGORIES = ['GEN','EWS','OBC','SC','ST','GEN-PwD','OBC-PwD','SC-PwD','ST-PwD']
-const GATE_BRANCHES = ['Computer Science','Electronics','Electrical','Mechanical','Civil','Chemical','Biotechnology','Mathematics']
+const STATES = ['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Delhi','Goa','Gujarat','Haryana','Himachal Pradesh','J&K','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Puducherry','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal']
+const GATE_BRANCHES = [
+  { name: 'Computer Science', code: 'CS' },
+  { name: 'Electronics', code: 'EC' },
+  { name: 'Electrical', code: 'EE' },
+  { name: 'Mechanical', code: 'ME' },
+  { name: 'Civil', code: 'CE' },
+  { name: 'Chemical', code: 'CH' },
+  { name: 'Biotechnology', code: 'BT' },
+  { name: 'Mathematics', code: 'MA' },
+  { name: 'Data Science', code: 'DA' }
+]
 
 declare global {
   interface Window { Razorpay: any }
@@ -13,14 +24,18 @@ declare global {
 function PredictForm() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const defaultExam = searchParams.get('exam') || 'GATE'
+  const rawExam = searchParams.get('exam') || 'GATE'
+  const defaultExam = rawExam === 'JEE' ? 'JEE_MAIN' : rawExam
 
   const [step, setStep] = useState(1)
   const [form, setForm] = useState({
     exam: defaultExam,
     rank: '',
+    crl: '',
     category: 'GEN',
-    branch: 'Computer Science',
+    branch: 'CS',
+    gender: 'Male',
+    homeState: '',
     name: '',
     email: '',
     phone: '',
@@ -35,10 +50,23 @@ function PredictForm() {
     setLoading(true)
     setError('')
     try {
+      const isGate = form.exam === 'GATE'
       const res = await fetch('/api/predict', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ examType: form.exam, rank: parseInt(form.rank), category: form.category, branch: form.branch })
+        body: JSON.stringify({
+          examType: form.exam,
+          category: form.category,
+          branch: form.branch,
+          ...(isGate
+            ? { score: parseInt(form.rank) }
+            : {
+                rank: parseInt(form.rank),
+                crlRank: form.category === 'GEN' ? parseInt(form.rank) : (form.crl ? parseInt(form.crl) : undefined),
+                gender: form.gender,
+                homeState: form.homeState,
+              }),
+        })
       })
       const data = await res.json()
       setPreview(data.results?.slice(0, 3) || [])
@@ -63,7 +91,7 @@ function PredictForm() {
       // If no real Razorpay key is configured, skip to results directly (dev/demo mode)
       const isDemo = !order.keyId || order.keyId.includes('YOUR_KEY')
       if (isDemo || !window.Razorpay) {
-        router.push(`/results?exam=${form.exam}&rank=${form.rank}&category=${form.category}&branch=${form.branch}&paid=true`)
+        router.push(`/results?exam=${form.exam}&${form.exam==='GATE'?'score':'rank'}=${form.rank}&category=${form.category}&branch=${form.branch}&gender=${form.gender}&state=${encodeURIComponent(form.homeState)}&crl=${form.crl}&paid=true`)
         return
       }
 
@@ -86,7 +114,7 @@ function PredictForm() {
           })
           const verified = await verifyRes.json()
           if (verified.success) {
-            router.push(`/results?exam=${form.exam}&rank=${form.rank}&category=${form.category}&branch=${form.branch}&paid=true`)
+            router.push(`/results?exam=${form.exam}&${form.exam==='GATE'?'score':'rank'}=${form.rank}&category=${form.category}&branch=${form.branch}&gender=${form.gender}&state=${encodeURIComponent(form.homeState)}&crl=${form.crl}&paid=true`)
           } else {
             setError('Payment verification failed. Please contact support.')
             setLoading(false)
@@ -141,24 +169,50 @@ function PredictForm() {
               {/* Exam Toggle */}
               <div>
                 <label style={labelStyle}>Select Exam</label>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0.75rem'}}>
-                  {['GATE','JEE'].map(e => (
-                    <button key={e} onClick={() => update('exam', e)}
-                      style={{padding:'0.75rem',borderRadius:'10px',cursor:'pointer',fontFamily:'Syne',fontWeight:600,fontSize:'0.95rem',transition:'all 0.2s',
-                        background:form.exam===e?'var(--accent)':'rgba(255,255,255,0.04)',
-                        border:form.exam===e?'1px solid var(--accent)':'1px solid rgba(255,255,255,0.1)',
-                        color:form.exam===e?'white':'var(--text-muted)'}}>
-                      {e === 'GATE' ? '🎓 GATE' : '📐 JEE Mains'}
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'0.6rem'}}>
+                  {[{k:'GATE',l:'🎓 GATE'},{k:'JEE_MAIN',l:'📐 JEE Main'},{k:'JEE_ADV',l:'🏛 JEE Adv'}].map(e => (
+                    <button key={e.k} onClick={() => update('exam', e.k)}
+                      style={{padding:'0.7rem 0.4rem',borderRadius:'10px',cursor:'pointer',fontFamily:'Syne',fontWeight:600,fontSize:'0.85rem',transition:'all 0.2s',
+                        background:form.exam===e.k?'var(--accent)':'rgba(255,255,255,0.04)',
+                        border:form.exam===e.k?'1px solid var(--accent)':'1px solid rgba(255,255,255,0.1)',
+                        color:form.exam===e.k?'white':'var(--text-muted)'}}>
+                      {e.l}
                     </button>
                   ))}
+                </div>
+                <div style={{fontSize:'0.72rem',color:'var(--text-muted)',marginTop:'0.4rem'}}>
+                  {form.exam==='GATE' ? 'M.Tech via COAP/CCMT — IITs, NITs, IIITs, GFTIs'
+                   : form.exam==='JEE_ADV' ? 'B.Tech at IITs only (JEE Advanced rank)'
+                   : 'B.Tech at NITs, IIITs & GFTIs (JEE Main rank)'}
                 </div>
               </div>
 
               <div>
-                <label style={labelStyle}>{form.exam === 'GATE' ? 'GATE Score' : 'JEE Mains Rank (CRL)'}</label>
-                <input type="number" placeholder={form.exam==='GATE'?'e.g. 750':'e.g. 12000'}
+                <label style={labelStyle}>
+                  {form.exam === 'GATE' ? 'GATE Score (out of 1000)'
+                   : form.category !== 'GEN'
+                     ? (form.exam === 'JEE_ADV' ? 'JEE Advanced Category Rank' : 'JEE Main Category Rank')
+                     : (form.exam === 'JEE_ADV' ? 'JEE Advanced Rank (CRL)' : 'JEE Main Rank (CRL)')}
+                </label>
+                <input type="number" placeholder={form.exam==='GATE'?'e.g. 750':form.exam==='JEE_ADV'?'e.g. 4500':'e.g. 35000'}
                   value={form.rank} onChange={e => update('rank', e.target.value)} style={inputStyle} />
+                {form.exam !== 'GATE' && form.category !== 'GEN' && (
+                  <div style={{fontSize:'0.72rem',color:'var(--accent3)',marginTop:'0.35rem'}}>
+                    Enter your <strong>{form.category} category rank</strong> here (used for reserved JoSAA seats).
+                  </div>
+                )}
               </div>
+
+              {form.exam !== 'GATE' && form.category !== 'GEN' && (
+                <div>
+                  <label style={labelStyle}>All-India CRL Rank <span style={{color:'var(--text-muted)',fontSize:'0.75rem'}}>(Common Rank List)</span></label>
+                  <input type="number" placeholder="e.g. 120000"
+                    value={form.crl} onChange={e => update('crl', e.target.value)} style={inputStyle} />
+                  <div style={{fontSize:'0.72rem',color:'var(--text-muted)',marginTop:'0.35rem'}}>
+                    Needed for <strong>Open seats</strong> (reserved candidates can take them via CRL) and all <strong>CSAB</strong> seats. Leave blank to see reserved-seat predictions only.
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label style={labelStyle}>Category</label>
@@ -167,13 +221,47 @@ function PredictForm() {
                 </select>
               </div>
 
-              {form.exam === 'GATE' && (
-                <div>
-                  <label style={labelStyle}>Branch / Paper</label>
-                  <select value={form.branch} onChange={e => update('branch', e.target.value)} style={inputStyle}>
-                    {GATE_BRANCHES.map(b => <option key={b} value={b}>{b}</option>)}
-                  </select>
-                </div>
+              <div>
+                <label style={labelStyle}>{form.exam === 'GATE' ? 'GATE Paper' : 'Branch'}</label>
+                <select value={form.branch} onChange={e => update('branch', e.target.value)} style={inputStyle}>
+                  {GATE_BRANCHES.map(b => <option key={b.code} value={b.code}>{b.name}</option>)}
+                </select>
+              </div>
+
+              {form.exam !== 'GATE' && (
+                <>
+                  <div>
+                    <label style={labelStyle}>Gender</label>
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0.75rem'}}>
+                      {['Male','Female'].map(g => (
+                        <button key={g} onClick={() => update('gender', g)}
+                          style={{padding:'0.7rem',borderRadius:'10px',cursor:'pointer',fontFamily:'Syne',fontWeight:600,fontSize:'0.9rem',
+                            background:form.gender===g?'var(--accent)':'rgba(255,255,255,0.04)',
+                            border:form.gender===g?'1px solid var(--accent)':'1px solid rgba(255,255,255,0.1)',
+                            color:form.gender===g?'white':'var(--text-muted)'}}>
+                          {g === 'Female' ? '♀ Female' : '♂ Male'}
+                        </button>
+                      ))}
+                    </div>
+                    {form.gender === 'Female' && (
+                      <div style={{fontSize:'0.72rem',color:'var(--accent2)',marginTop:'0.4rem'}}>
+                        Includes female-only (supernumerary) seats — usually more lenient cutoffs.
+                      </div>
+                    )}
+                  </div>
+                  {form.exam === 'JEE_MAIN' && (
+                    <div>
+                      <label style={labelStyle}>Home State <span style={{color:'var(--text-muted)',fontSize:'0.75rem'}}>(state where you passed Class 12)</span></label>
+                      <select value={form.homeState} onChange={e => update('homeState', e.target.value)} style={inputStyle}>
+                        <option value="">— Select home state —</option>
+                        {STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                      <div style={{fontSize:'0.72rem',color:'var(--text-muted)',marginTop:'0.35rem'}}>
+                        NITs/GFTIs reserve ~50% seats for home-state students. IITs &amp; IIITs are All-India (no state quota).
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
               {error && <div style={{color:'#f7854f',fontSize:'0.85rem'}}>{error}</div>}

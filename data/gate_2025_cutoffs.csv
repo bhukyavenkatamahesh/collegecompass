@@ -2275,29 +2275,58 @@ IIT Bhilai,Biomedical Devices,,OBC,0,387,387
 IIT Bhilai,Biomedical Devices,,SC,0,282,282
 IIT Bhilai,Biomedical Devices,,ST,0,249,249
 IIT Bhilai,Biomedical Devices,,GEN,0,311,311
-IIT Bhilai,Computer Science and 580 NA 577 431 404 NA 380 NA 614 NA Engineering Control and 366 NA 354 NA 351 NA NA NA 441 NA Instrumentation Data Science and Artificial 557 NA 548 NA 393 NA 315 NA 610 NA Intelligence Design and Manufacturing,,EWS,0,340,340
-IIT Bhilai,Computer Science and 580 NA 577 431 404 NA 380 NA 614 NA Engineering Control and 366 NA 354 NA 351 NA NA NA 441 NA Instrumentation Data Science and Artificial 557 NA 548 NA 393 NA 315 NA 610 NA Intelligence Design and Manufacturing,,OBC,0,345,345
-IIT Bhilai,Computer Science and 580 NA 577 431 404 NA 380 NA 614 NA Engineering Control and 366 NA 354 NA 351 NA NA NA 441 NA Instrumentation Data Science and Artificial 557 NA 548 NA 393 NA 315 NA 610 NA Intelligence Design and Manufacturing,,SC,0,255,255
-IIT Bhilai,Computer Science and 580 NA 577 431 404 NA 380 NA 614 NA Engineering Control and 366 NA 354 NA 351 NA NA NA 441 NA Instrumentation Data Science and Artificial 557 NA 548 NA 393 NA 315 NA 610 NA Intelligence Design and Manufacturing,,ST,0,272,272
-IIT Bhilai,Computer Science and 580 NA 577 431 404 NA 380 NA 614 NA Engineering Control and 366 NA 354 NA 351 NA NA NA 441 NA Instrumentation Data Science and Artificial 557 NA 548 NA 393 NA 315 NA 610 NA Intelligence Design and Manufacturing,,GEN,0,389,389
+IIT Bhilai,Computer Science and Engineering,,EWS,0,580,580
+IIT Bhilai,Computer Science and Engineering,,OBC,0,577,577
+IIT Bhilai,Computer Science and Engineering,,OBC-PwD,0,431,431
+IIT Bhilai,Computer Science and Engineering,,SC,0,404,404
+IIT Bhilai,Computer Science and Engineering,,ST,0,380,380
+IIT Bhilai,Computer Science and Engineering,,GEN,0,614,614
+IIT Bhilai,Control and Instrumentation,,EWS,0,366,366
+IIT Bhilai,Control and Instrumentation,,OBC,0,354,354
+IIT Bhilai,Control and Instrumentation,,SC,0,351,351
+IIT Bhilai,Control and Instrumentation,,GEN,0,441,441
+IIT Bhilai,Data Science and Artificial Intelligence,,EWS,0,557,557
+IIT Bhilai,Data Science and Artificial Intelligence,,OBC,0,548,548
+IIT Bhilai,Data Science and Artificial Intelligence,,SC,0,393,393
+IIT Bhilai,Data Science and Artificial Intelligence,,ST,0,315,315
+IIT Bhilai,Data Science and Artificial Intelligence,,GEN,0,610,610
+IIT Bhilai,Design and Manufacturing,,EWS,0,340,340
+IIT Bhilai,Design and Manufacturing,,OBC,0,345,345
+IIT Bhilai,Design and Manufacturing,,SC,0,255,255
+IIT Bhilai,Design and Manufacturing,,ST,0,272,272
+IIT Bhilai,Design and Manufacturing,,GEN,0,389,389
 IIT Bhilai,Electric Vehicle Technology,,EWS,0,316,316
 IIT Bhilai,Electric Vehicle Technology,,OBC,0,351,351
 IIT Bhilai,Electric Vehicle Technology,,SC,0,340,340
 IIT Bhilai,Electric Vehicle Technology,,ST,0,244,244
 IIT Bhilai,Electric Vehicle Technology,,GEN,0,397,397
-IIT Bhilai,Electronics & Communication,,EWS,0,352,352
-IIT Bhilai,Electronics & Communication,,OBC,0,393,393
-IIT Bhilai,Electronics & Communication,,SC,0,303,303
-IIT Bhilai,Electronics & Communication,,ST,0,231,231
-IIT Bhilai,Electronics & Communication,,GEN,0,436,436
-IIT Bhilai,Engineering Materials Science and 337 NA 317 NA 245 NA 249 NA 362 NA Metallurgical Engineering Mechatronics Engineering,,EWS,0,334,334
-IIT Bhilai,Engineering Materials Science and 337 NA 317 NA 245 NA 249 NA 362 NA Metallurgical Engineering Mechatronics Engineering,,OBC,0,351,351
-IIT Bhilai,Engineering Materials Science and 337 NA 317 NA 245 NA 249 NA 362 NA Metallurgical Engineering Mechatronics Engineering,,SC,0,228,228
-IIT Bhilai,Engineering Materials Science and 337 NA 317 NA 245 NA 249 NA 362 NA Metallurgical Engineering Mechatronics Engineering,,GEN,0,406,406
+IIT Bhilai,Electronics & Communication Engineering,,EWS,0,352,352
+IIT Bhilai,Electronics & Communication Engineering,,OBC,0,393,393
+IIT Bhilai,Electronics & Communication Engineering,,SC,0,303,303
+IIT Bhilai,Electronics & Communication Engineering,,ST,0,231,231
+IIT Bhilai,Electronics & Communication Engineering,,GEN,0,436,436
+IIT Bhilai,Materials Science and Metallurgical Engineering,,EWS,0,337,337
+IIT Bhilai,Materials Science and Metallurgical Engineering,,OBC,0,317,317
+IIT Bhilai,Materials Science and Metallurgical Engineering,,SC,0,245,245
+IIT Bhilai,Materials Science and Metallurgical Engineering,,ST,0,249,249
+IIT Bhilai,Materials Science and Metallurgical Engineering,,GEN,0,362,362
+IIT Bhilai,Mechatronics Engineering,,EWS,0,334,334
+IIT Bhilai,Mechatronics Engineering,,OBC,0,351,351
+IIT Bhilai,Mechatronics Engineering,,SC,0,228,228
+IIT Bhilai,Mechatronics Engineering,,GEN,0,406,406
 IIT Bhilai,Microelectronics and VLSI,,EWS,0,424,424
 IIT Bhilai,Microelectronics and VLSI,,OBC,0,436,436
 IIT Bhilai,Microelectronics and VLSI,,SC,0,334,334
 IIT Bhilai,Microelectronics and VLSI,,GEN,0,444,444
+IIT Bhilai,Power Systems and Power Electronics,,OBC,0,374,374
+IIT Bhilai,Power Systems and Power Electronics,,SC,0,291,291
+IIT Bhilai,Power Systems and Power Electronics,,ST,0,263,263
+IIT Bhilai,Power Systems and Power Electronics,,GEN,0,393,393
+IIT Bhilai,Thermal and Fluids Engineering,,EWS,0,352,352
+IIT Bhilai,Thermal and Fluids Engineering,,OBC,0,331,331
+IIT Bhilai,Thermal and Fluids Engineering,,SC,0,213,213
+IIT Bhilai,Thermal and Fluids Engineering,,ST,0,222,222
+IIT Bhilai,Thermal and Fluids Engineering,,GEN,0,355,355
 IIT ISM Dhanbad,Artificial Intelligence & Data Science,AI,GEN,10,685,685
 IIT ISM Dhanbad,Artificial Intelligence & Data Science,AI,OBC,10,632,632
 IIT ISM Dhanbad,Artificial Intelligence & Data Science,AI,EWS,10,664,664

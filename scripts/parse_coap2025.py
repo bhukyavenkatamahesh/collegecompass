@@ -559,28 +559,46 @@ def parse_ism(rows):
 
 
 def parse_bhilai(rows):
-    """IIT Bhilai: 10 cells; program names wrap across lines."""
+    """IIT Bhilai: 10-column table whose program names wrap across lines and
+    around the number row. Parsed by word coordinates: values are bucketed to
+    10 category columns by x; program names to value-row bands by y."""
     cats = ["EWS", "EWS-PwD", "OBC", "OBC-PwD", "SC",
             "SC-PwD", "ST", "ST-PwD", "GEN", "GEN-PwD"]
     with pdfplumber.open(os.path.join(RAW, "iitbhilai.pdf")) as pdf:
-        pending = ""
-        for line in (pdf.pages[0].extract_text() or "").split("\n"):
-            if line.strip().startswith(("Category", "Discipline", "Note", "EWS",
-                                        "OBC", "PWD", "PwD", "(NCL)")) \
-                    or re.match(r"^\d+\.", line.strip()):
+        w = pdf.pages[0].extract_words()
+        val = [x for x in w
+               if (x["text"].isdigit() or x["text"] == "NA") and x["x0"] > 180]
+        if not val:
+            return
+        cols = _cluster(sorted((x["x0"] + x["x1"]) / 2 for x in val))
+        if len(cols) != 10:
+            return
+        tops = _cluster(sorted({round(x["top"]) for x in val}), 6)
+        names = [x for x in w if x["x0"] < 185 and x["top"] >= 110
+                 and not x["text"].strip("&,-").isdigit()]
+        for k, t in enumerate(tops):
+            lo = (tops[k - 1] + t) / 2 if k else t - 12
+            hi = (t + tops[k + 1]) / 2 if k + 1 < len(tops) else t + 18
+            prog = " ".join(
+                x["text"] for x in sorted(names, key=lambda x: (x["top"], x["x0"]))
+                if lo <= x["top"] < hi)
+            prog = " ".join(prog.split())
+            slots = {}
+            for x in val:
+                if not (lo <= x["top"] < hi):
+                    continue
+                cx = (x["x0"] + x["x1"]) / 2
+                ci = min(range(10), key=lambda i: abs(cols[i] - cx))
+                if abs(cols[ci] - cx) <= 22 and ci not in slots:
+                    slots[ci] = x["text"]
+            if not prog:
                 continue
-            label, cells = split_trailing(line, 10)
-            if not label:
-                pending = (pending + " " + line.strip()).strip()
-                continue
-            program = (pending + " " + label).strip()
-            pending = ""
             for i, cat in enumerate(cats):
-                s = norm(cells[i])
+                s = norm(slots.get(i, ""))
                 if s is None:
                     continue
                 rows.append({
-                    "institute": "IIT Bhilai", "program": program,
+                    "institute": "IIT Bhilai", "program": prog,
                     "paper": "", "category": cat, "round": 0,
                     "openScore": s, "closeScore": s,
                 })

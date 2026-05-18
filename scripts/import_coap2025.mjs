@@ -44,7 +44,8 @@ async function main() {
   const csv = readFileSync(path.join(__dirname, '../data/gate_2025_cutoffs.csv'), 'utf-8')
   const rows = parseCsv(csv)
 
-  await prisma.cutoff.deleteMany({ where: { examType: 'GATE', year: 2025 } })
+  // COAP = IITs only. Must NOT wipe CCMT (NIT/IIIT/GFTI) GATE rows.
+  await prisma.cutoff.deleteMany({ where: { examType: 'GATE', year: 2025, instituteType: 'IIT' } })
 
   const records = rows.map(r => ({
     examType: 'GATE',

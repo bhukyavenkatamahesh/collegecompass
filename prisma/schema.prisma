@@ -55,6 +55,9 @@ model Cutoff {
   openScore  Int?   // GATE score cutoff (COAP) — opening
   closeScore Int?   // GATE score cutoff (COAP) — closing / last offered
   paper      String? // GATE paper code (where published)
+  gender     String? // JEE: "Gender-Neutral" | "Female-only (including Supernumerary)"
+  quota      String? // JEE: AI | HS | OS | GO | JK | LA
+  source     String? // JEE: JOSAA | CSAB  (rank basis differs — see predictor)
   state      String?
   instituteType String? // NIT | IIT | IIIT | GFTI
   updatedAt  DateTime @updatedAt

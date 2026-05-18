@@ -2,126 +2,216 @@
 import Link from 'next/link'
 import { useState } from 'react'
 
+const STATS = [
+  ['1.8 Lakh+', 'Official cutoff records'],
+  ['197', 'Institutes covered'],
+  ['19', 'IITs (M.Tech via COAP)'],
+  ['2025', 'Latest counselling data'],
+]
+
+const SOURCES = ['JoSAA 2025', 'CSAB 2025', 'COAP 2025', 'CCMT 2025']
+
+const EXAMS = [
+  {
+    id: 'GATE', tag: 'M.Tech', title: 'GATE Predictor',
+    desc: 'Enter your GATE score, paper and category to see M.Tech programmes you can get across IITs, NITs, IIITs and GFTIs.',
+    chips: ['IITs (COAP)', 'NITs/IIITs (CCMT)', 'Score-based', 'Category + PwD'],
+    href: '/predict?exam=GATE',
+  },
+  {
+    id: 'JEE_MAIN', tag: 'B.Tech', title: 'JEE Main Predictor',
+    desc: 'Predict B.Tech seats at NITs, IIITs and GFTIs — with home-state quota, gender pool and category-rank handling exactly like JoSAA.',
+    chips: ['NITs', 'IIITs', 'GFTIs', 'Home-state quota'],
+    href: '/predict?exam=JEE_MAIN',
+  },
+  {
+    id: 'JEE_ADV', tag: 'B.Tech', title: 'JEE Advanced Predictor',
+    desc: 'IIT-only B.Tech prediction on your JEE Advanced rank, with reserved category ranks and female-supernumerary seats.',
+    chips: ['23 IITs', 'All-India', 'Female pool', 'Category rank'],
+    href: '/predict?exam=JEE_ADV',
+  },
+]
+
 export default function HomePage() {
-  const [hoveredCard, setHoveredCard] = useState<string | null>(null)
+  const [hover, setHover] = useState<string | null>(null)
 
   return (
-    <div className="min-h-screen grid-bg relative overflow-hidden">
-      {/* Ambient orbs */}
-      <div style={{position:'absolute',top:'-10%',left:'-5%',width:'500px',height:'500px',borderRadius:'50%',background:'radial-gradient(circle, rgba(79,110,247,0.15) 0%, transparent 70%)',pointerEvents:'none'}} />
-      <div style={{position:'absolute',bottom:'-10%',right:'-5%',width:'600px',height:'600px',borderRadius:'50%',background:'radial-gradient(circle, rgba(56,201,160,0.1) 0%, transparent 70%)',pointerEvents:'none'}} />
+    <div className="min-h-screen relative" style={{ overflowX: 'hidden' }}>
+      <div className="grid-bg" style={{ position: 'absolute', inset: 0, height: '70vh', pointerEvents: 'none' }} />
 
       {/* Nav */}
-      <nav style={{padding:'1.5rem 2rem',display:'flex',justifyContent:'space-between',alignItems:'center',borderBottom:'1px solid rgba(99,140,255,0.1)'}}>
-        <div style={{fontFamily:'Syne',fontWeight:800,fontSize:'1.4rem'}}>
-          <span className="gradient-text">CollegeCompass</span>
+      <nav className="nav-pad" style={{ position: 'relative', padding: '1.25rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1180px', margin: '0 auto', gap: '1rem' }}>
+        <div style={{ fontFamily: 'Satoshi, sans-serif', fontWeight: 900, fontSize: '1.5rem', letterSpacing: '-0.04em', color: 'var(--text)' }}>
+          collegecompass<span style={{ color: 'var(--accent)' }}>.</span>
         </div>
-        <div style={{display:'flex',gap:'2rem',alignItems:'center'}}>
-          <Link href="#how" style={{color:'var(--text-muted)',textDecoration:'none',fontSize:'0.9rem'}}>How it works</Link>
-          <Link href="#pricing" style={{color:'var(--text-muted)',textDecoration:'none',fontSize:'0.9rem'}}>Pricing</Link>
-          <Link href="/predict" className="btn-primary" style={{padding:'0.5rem 1.25rem',borderRadius:'8px',fontSize:'0.9rem'}}>
-            Get Started
-          </Link>
+        <div style={{ display: 'flex', gap: '1.7rem', alignItems: 'center' }}>
+          <Link href="#how" className="hide-sm" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.92rem', fontWeight: 500 }}>How it works</Link>
+          <Link href="#trust" className="hide-sm" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.92rem', fontWeight: 500 }}>Our data</Link>
+          <Link href="#pricing" className="hide-sm" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.92rem', fontWeight: 500 }}>Pricing</Link>
+          <Link href="/predict" className="btn-ghost hide-sm" style={{ padding: '0.55rem 1.15rem', borderRadius: 10, fontSize: '0.88rem', textDecoration: 'none', whiteSpace: 'nowrap' }}>Sign in</Link>
+          <Link href="/predict" className="btn-primary" style={{ padding: '0.6rem 1.3rem', borderRadius: 10, fontSize: '0.88rem', textDecoration: 'none', whiteSpace: 'nowrap' }}>Get Started</Link>
         </div>
       </nav>
 
       {/* Hero */}
-      <section style={{maxWidth:'900px',margin:'0 auto',textAlign:'center',padding:'6rem 2rem 4rem'}}>
-        <div className="fade-up fade-up-1" style={{display:'inline-block',background:'rgba(79,110,247,0.1)',border:'1px solid rgba(79,110,247,0.3)',borderRadius:'100px',padding:'0.35rem 1rem',marginBottom:'1.5rem',fontSize:'0.85rem',color:'var(--accent)'}}>
-          🎯 2024-25 Cutoff Data • GATE & JEE Mains
+      <section className="hero-pad" style={{ maxWidth: 880, margin: '0 auto', textAlign: 'center', padding: '5rem 2rem 3.5rem', position: 'relative' }}>
+        <div className="pill fade-up fade-up-1" style={{ marginBottom: '1.6rem' }}>
+          <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent-2)', flexShrink: 0 }} />
+          Built on official 2025 counselling cutoffs
         </div>
-        <h1 className="fade-up fade-up-2" style={{fontSize:'clamp(2.5rem, 6vw, 4rem)',fontWeight:800,lineHeight:1.1,marginBottom:'1.5rem'}}>
-          Know Your <span className="gradient-text">College Chances</span> Before Counselling
+        <h1 className="fade-up fade-up-2" style={{ fontSize: 'clamp(2rem, 6vw, 3.7rem)', fontWeight: 800, marginBottom: '1.3rem' }}>
+          Know exactly which colleges your rank can get you
         </h1>
-        <p className="fade-up fade-up-3" style={{fontSize:'1.15rem',color:'var(--text-muted)',maxWidth:'600px',margin:'0 auto 2.5rem',lineHeight:1.7}}>
-          Enter your rank and get a personalized list of colleges you can get into — sorted by probability, filtered by category. No guesswork.
+        <p className="fade-up fade-up-3" style={{ fontSize: 'clamp(1rem, 2.5vw, 1.12rem)', color: 'var(--text-muted)', maxWidth: 600, margin: '0 auto 2.4rem', lineHeight: 1.7 }}>
+          A GATE &amp; JEE predictor built on real JoSAA, CSAB, COAP and CCMT 2025 data — with the same category, quota and gender rules the official counselling uses.
         </p>
-        <div className="fade-up fade-up-4" style={{display:'flex',gap:'1rem',justifyContent:'center',flexWrap:'wrap'}}>
-          <Link href="/predict?exam=GATE" className="btn-primary glow" style={{padding:'0.875rem 2rem',borderRadius:'12px',fontSize:'1rem',display:'inline-block',textDecoration:'none'}}>
-            🎓 Predict GATE Colleges
-          </Link>
-          <Link href="/predict?exam=JEE" style={{padding:'0.875rem 2rem',borderRadius:'12px',fontSize:'1rem',display:'inline-block',textDecoration:'none',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.1)',color:'var(--text)',fontFamily:'Syne',fontWeight:600}}>
-            📐 Predict JEE Colleges
-          </Link>
+        <div className="fade-up fade-up-4 hero-cta" style={{ display: 'flex', gap: '0.9rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <Link href="/predict?exam=GATE" className="btn-primary" style={{ padding: '0.9rem 1.9rem', borderRadius: 12, fontSize: '1rem', textDecoration: 'none' }}>Predict GATE colleges</Link>
+          <Link href="/predict?exam=JEE_MAIN" className="btn-ghost" style={{ padding: '0.9rem 1.9rem', borderRadius: 12, fontSize: '1rem', textDecoration: 'none' }}>Predict JEE colleges</Link>
         </div>
 
-        {/* Stats bar */}
-        <div style={{display:'flex',gap:'2rem',justifyContent:'center',marginTop:'4rem',flexWrap:'wrap'}}>
-          {[['10,000+','Students Helped'],['800+','Colleges in Database'],['98%','Prediction Accuracy'],['₹49','One-time fee']].map(([num, label]) => (
-            <div key={label} style={{textAlign:'center'}}>
-              <div style={{fontFamily:'Syne',fontWeight:800,fontSize:'1.6rem',background:'var(--gradient)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>{num}</div>
-              <div style={{color:'var(--text-muted)',fontSize:'0.8rem',marginTop:'0.25rem'}}>{label}</div>
+        <div className="fade-up fade-up-5 grid-stats" style={{ marginTop: '3.5rem' }}>
+          {STATS.map(([num, label]) => (
+            <div key={label} className="glass" style={{ padding: '1.1rem 0.75rem' }}>
+              <div className="gradient-text" style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: '1.55rem' }}>{num}</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: '0.3rem' }}>{label}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Exam Cards */}
-      <section style={{maxWidth:'860px',margin:'0 auto',padding:'2rem 2rem 6rem',display:'grid',gridTemplateColumns:'1fr 1fr',gap:'1.5rem'}}>
-        {[
-          { id:'GATE', emoji:'🎓', title:'GATE Predictor', desc:'Get M.Tech admission chances across IITs, NITs, and IIITs based on your GATE rank and branch.', tags:['IIT','NIT','IIIT','PSU'], color:'var(--accent)', href:'/predict?exam=GATE' },
-          { id:'JEE', emoji:'📐', title:'JEE Mains Predictor', desc:'Predict B.Tech colleges you can get into based on your JEE Mains rank across all categories.', tags:['NIT','IIIT','GFTI','All Categories'], color:'var(--accent2)', href:'/predict?exam=JEE' },
-        ].map(card => (
-          <Link key={card.id} href={card.href} style={{textDecoration:'none'}}
-            onMouseEnter={() => setHoveredCard(card.id)}
-            onMouseLeave={() => setHoveredCard(null)}>
-            <div className="glass" style={{padding:'2rem',borderRadius:'16px',transition:'all 0.3s',transform:hoveredCard===card.id?'translateY(-4px)':'none',borderColor:hoveredCard===card.id?card.color:'var(--border)'}}>
-              <div style={{fontSize:'2.5rem',marginBottom:'1rem'}}>{card.emoji}</div>
-              <h3 style={{fontFamily:'Syne',fontWeight:700,fontSize:'1.25rem',marginBottom:'0.75rem',color:hoveredCard===card.id?card.color:'var(--text)'}}>{card.title}</h3>
-              <p style={{color:'var(--text-muted)',fontSize:'0.9rem',lineHeight:1.6,marginBottom:'1.25rem'}}>{card.desc}</p>
-              <div style={{display:'flex',gap:'0.5rem',flexWrap:'wrap'}}>
-                {card.tags.map(tag => (
-                  <span key={tag} style={{background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:'6px',padding:'0.25rem 0.6rem',fontSize:'0.75rem',color:'var(--text-muted)'}}>{tag}</span>
-                ))}
+      {/* Trust strip */}
+      <section className="sec-pad" style={{ maxWidth: 1000, margin: '0 auto', padding: '0 2rem 1rem' }}>
+        <div className="glass" style={{ padding: '1.1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.9rem', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.82rem', color: 'var(--text-faint)' }}>Data sourced directly from</span>
+          {SOURCES.map(s => <span key={s} className="tag" style={{ fontWeight: 600, color: 'var(--text)' }}>{s}</span>)}
+        </div>
+      </section>
+
+      {/* Exam cards */}
+      <section className="sec-pad grid-auto" style={{ maxWidth: 1080, margin: '0 auto', padding: '3rem 2rem' }}>
+        {EXAMS.map(card => (
+          <Link key={card.id} href={card.href} style={{ textDecoration: 'none' }}
+            onMouseEnter={() => setHover(card.id)} onMouseLeave={() => setHover(null)}>
+            <div className="glass card-hover" style={{ padding: '1.75rem', height: '100%', borderColor: hover === card.id ? 'var(--border-strong)' : 'var(--border)' }}>
+              <span className="tag" style={{ color: 'var(--accent-2)', borderColor: 'rgba(45,212,167,0.3)' }}>{card.tag}</span>
+              <h3 style={{ fontWeight: 700, fontSize: '1.3rem', margin: '0.9rem 0 0.6rem' }}>{card.title}</h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.65, marginBottom: '1.2rem' }}>{card.desc}</p>
+              <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '1.2rem' }}>
+                {card.chips.map(c => <span key={c} className="tag">{c}</span>)}
               </div>
+              <span style={{ color: 'var(--accent)', fontSize: '0.88rem', fontWeight: 600, fontFamily: 'Syne' }}>Start prediction →</span>
             </div>
           </Link>
         ))}
       </section>
 
-      {/* How it works */}
-      <section id="how" style={{maxWidth:'900px',margin:'0 auto',padding:'4rem 2rem'}}>
-        <h2 style={{textAlign:'center',fontWeight:800,fontSize:'2rem',marginBottom:'3rem'}}>How it <span className="gradient-text">Works</span></h2>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:'1.5rem'}}>
+      {/* Trust / methodology */}
+      <section id="trust" className="sec-pad" style={{ maxWidth: 1000, margin: '0 auto', padding: '3rem 2rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+          <h2 style={{ fontWeight: 800, fontSize: '2rem' }}>Why you can <span className="gradient-text">trust</span> these predictions</h2>
+          <p style={{ color: 'var(--text-muted)', marginTop: '0.6rem', fontSize: '0.95rem' }}>No black box. Here is exactly how the prediction works.</p>
+        </div>
+        <div className="grid-auto">
           {[
-            {step:'01',title:'Enter Your Details',desc:'Select your exam, enter your rank, category, and preferred branch.'},
-            {step:'02',title:'Pay ₹49',desc:'One-time secure payment via Razorpay. No subscriptions, no hidden fees.'},
-            {step:'03',title:'Get Your List',desc:'Receive a personalized college list with admission probability for each.'},
-            {step:'04',title:'Download PDF',desc:'Download a detailed PDF report to use during counselling rounds.'},
-          ].map(item => (
-            <div key={item.step} className="glass" style={{padding:'1.5rem',borderRadius:'12px',textAlign:'center'}}>
-              <div style={{fontFamily:'Syne',fontWeight:800,fontSize:'2.5rem',opacity:0.15,marginBottom:'0.5rem',color:'var(--accent)'}}>{item.step}</div>
-              <h4 style={{fontFamily:'Syne',fontWeight:700,marginBottom:'0.5rem'}}>{item.title}</h4>
-              <p style={{color:'var(--text-muted)',fontSize:'0.85rem',lineHeight:1.6}}>{item.desc}</p>
+            { t: 'Official data only', d: 'Every cutoff comes from the institutes’ own COAP/CCMT reports and the JoSAA/CSAB 2025 results — not crowd-sourced guesses.' },
+            { t: 'Real counselling rules', d: 'GATE is score-based; JEE Advanced maps to IITs and JEE Main to NITs/IIITs/GFTIs — with home-state quota, gender pool and reserved category ranks applied exactly as in counselling.' },
+            { t: 'Last-round cutoffs', d: 'Chances use each programme’s final-round closing cutoff, the most realistic threshold for "will I actually get a seat".' },
+            { t: 'Honest about limits', d: 'Predictions are indicative. Actual allotment depends on seat matrix and choice-filling each year — we never claim a fake accuracy number.' },
+          ].map(x => (
+            <div key={x.t} className="glass" style={{ padding: '1.4rem' }}>
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(91,124,250,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent)', marginBottom: '0.85rem' }}>✓</div>
+              <h4 style={{ fontWeight: 700, fontSize: '1.02rem', marginBottom: '0.45rem' }}>{x.t}</h4>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.86rem', lineHeight: 1.6 }}>{x.d}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" style={{maxWidth:'500px',margin:'0 auto',padding:'4rem 2rem 8rem',textAlign:'center'}}>
-        <h2 style={{fontWeight:800,fontSize:'2rem',marginBottom:'0.5rem'}}>Simple <span className="gradient-text">Pricing</span></h2>
-        <p style={{color:'var(--text-muted)',marginBottom:'2rem'}}>One-time fee. No subscriptions.</p>
-        <div className="glass glow" style={{padding:'2.5rem',borderRadius:'20px'}}>
-          <div style={{fontFamily:'Syne',fontWeight:800,fontSize:'3.5rem',background:'var(--gradient)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>₹49</div>
-          <div style={{color:'var(--text-muted)',marginBottom:'1.5rem',fontSize:'0.9rem'}}>per exam prediction</div>
-          <ul style={{textAlign:'left',listStyle:'none',marginBottom:'2rem',display:'flex',flexDirection:'column',gap:'0.75rem'}}>
-            {['Full college list with probability','PDF report download','Category-wise filtering','All India rank analysis','Instant results'].map(f => (
-              <li key={f} style={{display:'flex',alignItems:'center',gap:'0.75rem',color:'var(--text-muted)',fontSize:'0.9rem'}}>
-                <span style={{color:'var(--accent2)',fontSize:'1rem'}}>✓</span>{f}
-              </li>
-            ))}
-          </ul>
-          <Link href="/predict" className="btn-primary" style={{display:'block',padding:'0.875rem',borderRadius:'12px',textDecoration:'none',fontSize:'1rem'}}>
-            Get Your Prediction →
-          </Link>
+      {/* How it works */}
+      <section id="how" className="sec-pad" style={{ maxWidth: 980, margin: '0 auto', padding: '3rem 2rem' }}>
+        <h2 style={{ textAlign: 'center', fontWeight: 800, fontSize: '2rem', marginBottom: '2.5rem' }}>How it <span className="gradient-text">works</span></h2>
+        <div className="grid-auto">
+          {[
+            { s: '01', t: 'Enter your details', d: 'Pick your exam, then enter score/rank, category, gender and home state where relevant.' },
+            { s: '02', t: 'See a free preview', d: 'Get a sample of your top matches instantly — before paying anything.' },
+            { s: '03', t: 'Unlock the full list', d: 'One-time ₹49 via secure Razorpay. No signup, no subscription.' },
+            { s: '04', t: 'Download your report', d: 'Filter by chance and institute type, then export a PDF for counselling.' },
+          ].map(x => (
+            <div key={x.s} className="glass" style={{ padding: '1.5rem' }}>
+              <div style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: '1.6rem', color: 'var(--accent)', opacity: 0.4 }}>{x.s}</div>
+              <h4 style={{ fontWeight: 700, margin: '0.6rem 0 0.4rem' }}>{x.t}</h4>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: 1.6 }}>{x.d}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Pricing — light "preview" vs dark "full report" */}
+      <section id="pricing" className="sec-pad" style={{ maxWidth: 1000, margin: '0 auto', padding: '4rem 2rem 5rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2.6rem' }}>
+          <h2 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)' }}>Stop guessing your colleges.</h2>
+          <p style={{ marginTop: '0.7rem', fontSize: '1.05rem' }}>
+            <span className="weak">See a free preview,&nbsp;</span><span className="emph" style={{ fontWeight: 700 }}>then unlock everything</span>
+          </p>
+        </div>
+
+        <div className="grid-2">
+          {/* Free */}
+          <div style={{ background: 'var(--bg-card-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '2.2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, fontFamily: 'Satoshi', fontSize: '1.05rem' }}>✦ Free preview</div>
+            <div style={{ margin: '1.3rem 0 1rem', fontFamily: 'Satoshi', fontWeight: 900, fontSize: '2rem' }}>₹0</div>
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.7rem', marginBottom: '1.6rem' }}>
+              {['Your top 3 matched colleges', 'Real 2025 cutoff each', 'Category & exam aware'].map(f => (
+                <li key={f} style={{ display: 'flex', gap: '0.6rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}><span className="emph">✓</span>{f}</li>
+              ))}
+            </ul>
+            <Link href="/predict" className="btn-ghost" style={{ display: 'block', textAlign: 'center', padding: '0.85rem', borderRadius: 12, textDecoration: 'none', fontSize: '0.95rem' }}>Try it free →</Link>
+          </div>
+
+          {/* Paid */}
+          <div className="card-dark" style={{ padding: '2.2rem' }}>
+            <span className="badge-accent">Full Report</span>
+            <div style={{ margin: '1.3rem 0 0.3rem', fontFamily: 'Satoshi', fontWeight: 900, fontSize: '2.6rem', color: '#fff' }}>
+              ₹49 <span style={{ fontSize: '1rem', fontWeight: 500 }} className="muted-d">one-time</span>
+            </div>
+            <p className="muted-d" style={{ fontSize: '0.9rem', margin: '0.4rem 0 1.4rem', lineHeight: 1.6 }}>Everything you need to make confident counselling choices.</p>
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.7rem' }}>
+              {['Full ranked list with chance %', 'Home-state, gender & quota aware', 'JoSAA + CSAB + COAP + CCMT', 'Downloadable PDF report', 'Instant — no account needed'].map(f => (
+                <li key={f} style={{ display: 'flex', gap: '0.6rem', fontSize: '0.92rem', color: '#f3ede8' }}><span className="emph">✓</span>{f}</li>
+              ))}
+            </ul>
+            <Link href="/predict" className="btn-primary" style={{ display: 'block', textAlign: 'center', padding: '0.9rem', borderRadius: 12, textDecoration: 'none', fontSize: '1rem', background: 'var(--accent)', color: '#fff', borderColor: 'var(--accent)' }}>Get your prediction →</Link>
+            <div className="muted-d" style={{ marginTop: '0.9rem', fontSize: '0.75rem', textAlign: 'center' }}>🔒 Secure payment via Razorpay</div>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer style={{borderTop:'1px solid var(--border)',padding:'2rem',textAlign:'center',color:'var(--text-muted)',fontSize:'0.85rem'}}>
-        <div style={{marginBottom:'0.5rem',fontFamily:'Syne',fontWeight:700}}>CollegeCompass</div>
-        <div>© 2025 CollegeCompass. All rights reserved. • <Link href="/admin" style={{color:'var(--accent)',textDecoration:'none'}}>Admin</Link></div>
+      <footer style={{ position: 'relative', paddingTop: '2.5rem' }}>
+        <div className="sec-pad" style={{ maxWidth: 1100, margin: '0 auto', padding: '0 2rem' }}>
+          <div className="divider" style={{ marginBottom: '2.2rem' }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem', marginBottom: '1.5rem' }}>
+            <div style={{ maxWidth: 400 }}>
+              <div style={{ fontFamily: 'Satoshi', fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.04em', marginBottom: '0.5rem' }}>collegecompass<span style={{ color: 'var(--accent)' }}>.</span></div>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: 1.6 }}>An independent prediction tool. Not affiliated with JoSAA, CSAB, IIT, NIT, the GATE/JEE authorities or any institute.</p>
+            </div>
+            <div style={{ fontSize: '0.82rem', lineHeight: 1.9, color: 'var(--text-muted)' }}>
+              <div style={{ color: 'var(--text)', fontWeight: 700, marginBottom: '0.3rem', fontFamily: 'Satoshi' }}>Data</div>
+              <div>GATE 2025 — COAP &amp; CCMT</div>
+              <div>JEE 2025 — JoSAA &amp; CSAB</div>
+              <div>Updated May 2026</div>
+            </div>
+          </div>
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-faint)', lineHeight: 1.6, paddingTop: '1.2rem' }}>
+            Predictions are indicative and based on previous-round cutoffs. They do not guarantee admission — always verify on the official counselling portal.
+            <span style={{ float: 'right' }}>© 2026 CollegeCompass · <Link href="/admin" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Admin</Link></span>
+          </div>
+        </div>
+        {/* Oversized clipped brand */}
+        <div style={{ overflow: 'hidden', textAlign: 'center', marginTop: '1.5rem', height: 'clamp(3.2rem, 13vw, 12rem)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <span className="brand-giant">collegecompass.</span>
+        </div>
       </footer>
     </div>
   )
