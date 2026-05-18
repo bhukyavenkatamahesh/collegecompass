@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  phone     String?
+  createdAt DateTime @default(now())
+  payments  Payment[]
+  predictions Prediction[]
+}
+
+model Payment {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  razorpayOrderId String   @unique
+  razorpayPaymentId String? @unique
+  amount          Int
+  currency        String   @default("INR")
+  status          String   @default("created") // created | paid | failed
+  examType        String   // GATE | JEE
+  createdAt       DateTime @default(now())
+}
+
+model Prediction {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  examType  String   // GATE | JEE
+  score     Float
+  rank      Int?
+  category  String   // GEN | OBC | SC | ST | EWS
+  branch    String?  // for GATE
+  results   String   // JSON string of college list
+  createdAt DateTime @default(now())
+}
+
+model Cutoff {
+  id         String @id @default(cuid())
+  examType   String // GATE | JEE
+  year       Int
+  institute  String
+  program    String
+  category   String
+  round      Int    @default(1)
+  openRank   Int    @default(0)
+  closeRank  Int    @default(0)
+  openScore  Int?   // GATE score cutoff (COAP) — opening
+  closeScore Int?   // GATE score cutoff (COAP) — closing / last offered
+  paper      String? // GATE paper code (where published)
+  state      String?
+  instituteType String? // NIT | IIT | IIIT | GFTI
+  updatedAt  DateTime @updatedAt
+  createdAt  DateTime @default(now())
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}
