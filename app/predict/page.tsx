@@ -100,6 +100,41 @@ declare global { interface Window { Razorpay: unknown } }
 
 const L = { color:'var(--text)', fontSize:'0.83rem', fontWeight:600, fontFamily:'Satoshi,Inter,sans-serif', letterSpacing:'-0.01em', marginBottom:'0.4rem', display:'block' } as const
 
+function PredictFooter() {
+  const year = 2025
+  return (
+    <footer style={{ background:'#0a0a09', color:'#f5f3ef', padding:'2.5rem 0 1.2rem' }}>
+      <div className="container">
+        <div style={{ display:'flex', justifyContent:'space-between', flexWrap:'wrap', gap:'1.5rem', alignItems:'flex-start', paddingBottom:'1.5rem', borderBottom:'1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ maxWidth:380 }}>
+            <div className="nav-logo" style={{ marginBottom:'0.55rem', color:'#f5f3ef' }}>
+              college<span style={{ color:'var(--accent)' }}>compass</span>.
+            </div>
+            <p style={{ color:'#a8a5a0', fontSize:'0.83rem', lineHeight:1.65 }}>
+              Independent predictions using official cutoff data. Not affiliated with JoSAA, CSAB, IIT, NIT, CCMT, COAP, GATE or JEE authorities.
+            </p>
+          </div>
+          <div style={{ fontSize:'0.82rem', lineHeight:2, color:'#a8a5a0' }}>
+            <div style={{ color:'#f5f3ef', fontWeight:700, marginBottom:'0.2rem', fontFamily:'Satoshi,Inter,sans-serif' }}>Data sources</div>
+            <div>GATE {year}: COAP and CCMT</div>
+            <div>JEE {year}: JoSAA and CSAB</div>
+            <div>Updated May 2026</div>
+          </div>
+          <div style={{ fontSize:'0.82rem', lineHeight:2, color:'#a8a5a0' }}>
+            <div style={{ color:'#f5f3ef', fontWeight:700, marginBottom:'0.2rem', fontFamily:'Satoshi,Inter,sans-serif' }}>Predictors</div>
+            <div><Link href="/predict?exam=GATE" style={{ color:'#a8a5a0' }}>GATE Predictor</Link></div>
+            <div><Link href="/predict?exam=JEE_MAIN&counselling=JOSAA" style={{ color:'#a8a5a0' }}>JoSAA Predictor</Link></div>
+            <div><Link href="/predict?exam=JEE_MAIN&counselling=CSAB" style={{ color:'#a8a5a0' }}>CSAB Predictor</Link></div>
+          </div>
+        </div>
+        <div style={{ fontSize:'0.77rem', color:'#6b6966', lineHeight:1.6, paddingTop:'1rem' }}>
+          © {new Date().getFullYear()} CollegeCompass. Predictions are indicative. Always verify on the official counselling portal before making decisions.
+        </div>
+      </div>
+    </footer>
+  )
+}
+
 function PredictForm() {
   const sp = useSearchParams()
   const router = useRouter()
@@ -291,7 +326,7 @@ function PredictForm() {
   const chanceBg   = (c:string) => c==='High'?'rgba(31,157,107,0.12)':c==='Medium'?'var(--accent-bg)':'rgba(224,72,60,0.12)'
 
   return (
-    <div style={{ minHeight:'100vh', background:'var(--bg)', color:'var(--text)', paddingBottom:'4rem' }}>
+    <div style={{ minHeight:'100dvh', height:'100dvh', overflowY:'auto', overflowX:'hidden', WebkitOverflowScrolling:'touch', background:'var(--bg)', color:'var(--text)' }}>
       {/* Sticky nav */}
       <div className="nav-wrapper">
         <nav className="nav">
@@ -529,6 +564,7 @@ function PredictForm() {
           </div>
         </div>
       </div>
+      <PredictFooter />
     </div>
   )
 }
