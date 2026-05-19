@@ -35,20 +35,23 @@ export async function POST(req: NextRequest) {
       rank,
       score,
       category,
-      branch,       // GATE paper code (CS/EC/ME/…) or JEE branch (CS/EC/ME/…)
+      branch, // GATE paper code (CS/EC/ME/…) or JEE branch (CS/EC/ME/…)
       year = 2025,
-      round,        // optional — if not given, use best (min closeRank / max closeScore)
+      round, // optional — if not given, use best (min closeRank / max closeScore)
       instituteTypes, // optional array: ['IIT','NIT','IIIT','GFTI']
-      gender = 'Male',   // JEE only: 'Male' | 'Female'
-      homeState = '',    // JEE only: candidate's home state (for NIT/GFTI HS quota)
-      crlRank,           // JEE only: All-India CRL (needed for OPEN seats & CSAB)
-      crl,               // backwards-compatible alias used by older clients
-      counselling,       // JEE Main only: 'JOSAA' | 'CSAB'
+      gender = 'Male', // JEE only: 'Male' | 'Female'
+      homeState = '', // JEE only: candidate's home state (for NIT/GFTI HS quota)
+      crlRank, // JEE only: All-India CRL (needed for OPEN seats & CSAB)
+      crl, // backwards-compatible alias used by older clients
+      counselling, // JEE Main only: 'JOSAA' | 'CSAB'
       accessToken,
     } = body
 
     if (!examType || !category) {
-      return NextResponse.json({ error: 'Missing required fields: examType, category' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Missing required fields: examType, category' },
+        { status: 400 }
+      )
     }
     if (!CATEGORIES.includes(category)) {
       return NextResponse.json({ error: `Unsupported category: ${category}` }, { status: 400 })
@@ -64,7 +67,10 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'GATE score must be out of 1000' }, { status: 400 })
       }
       if (!branch) {
-        return NextResponse.json({ error: 'Provide branch (GATE paper code) e.g. CS, EC, ME' }, { status: 400 })
+        return NextResponse.json(
+          { error: 'Provide branch (GATE paper code) e.g. CS, EC, ME' },
+          { status: 400 }
+        )
       }
 
       const paper = branch.toUpperCase()
@@ -94,13 +100,15 @@ export async function POST(req: NextRequest) {
 
       // Deduplicate: keep the least competitive cutoff per (institute, program, category)
       // "least competitive" = lowest minimum score admitted (usually the last round)
-      const bestMap = new Map<string, typeof eligible[0]>()
+      const bestMap = new Map<string, (typeof eligible)[0]>()
       for (const c of eligible) {
         const key = `${c.institute}||${c.program}||${c.category}`
         const existing = bestMap.get(key)
-        
+
         const cMin = Math.min(c.openScore ?? 0, c.closeScore ?? 0)
-        const extMin = existing ? Math.min(existing.openScore ?? 0, existing.closeScore ?? 0) : Infinity
+        const extMin = existing
+          ? Math.min(existing.openScore ?? 0, existing.closeScore ?? 0)
+          : Infinity
 
         if (!existing || (cMin > 0 && cMin < extMin)) {
           bestMap.set(key, c)
@@ -115,7 +123,8 @@ export async function POST(req: NextRequest) {
           const closeScore = c.closeScore ?? 0
           const { chance, percent } = calculateChanceByScore(gateScore, openScore, closeScore)
           const expandedProgram = expandProgramName(c.program)
-          const isPrimary = isGatePrimaryProgram(expandedProgram, paper) || isGatePrimaryProgram(c.program, paper)
+          const isPrimary =
+            isGatePrimaryProgram(expandedProgram, paper) || isGatePrimaryProgram(c.program, paper)
           return {
             institute: c.institute,
             program: expandedProgram,
@@ -168,10 +177,16 @@ export async function POST(req: NextRequest) {
       const isJeeMain = jeeExam === 'JEE_MAIN'
       const catRank = positiveInteger(rank)
       if (!catRank) {
-        return NextResponse.json({ error: `Provide a valid ${isJeeAdv ? 'JEE Advanced' : 'JEE Main'} rank` }, { status: 400 })
+        return NextResponse.json(
+          { error: `Provide a valid ${isJeeAdv ? 'JEE Advanced' : 'JEE Main'} rank` },
+          { status: 400 }
+        )
       }
       if (isJeeMain && !String(homeState).trim()) {
-        return NextResponse.json({ error: 'Home state is required for JEE Main predictions' }, { status: 400 })
+        return NextResponse.json(
+          { error: 'Home state is required for JEE Main predictions' },
+          { status: 400 }
+        )
       }
 
       // Rank basis differs by source/seat:
@@ -194,26 +209,37 @@ export async function POST(req: NextRequest) {
       // Exam scopes institute types: Advanced = IIT only; Main = the rest.
       const scope = isJeeAdv ? ['IIT'] : ['NIT', 'IIIT', 'GFTI']
 
-      // Normalize the messy quota labels (JoSAA: AI/HS/OS — CSAB: All India/…)
+      // Normalize quota labels
+      // JoSAA uses: AI / HS / OS / GO / JK / LA
+      // CSAB uses:  All India / Home State / Other State / DASA-CIWG / Jammu & Kashmir (UT) / Ladakh (UT)
       const quotaClass = (q: string | null): 'AI' | 'HS' | 'OS' | 'OTHER' => {
-        const v = (q ?? '').toUpperCase()
+        const v = (q ?? '').toUpperCase().trim()
         if (v === 'AI' || v === 'ALL INDIA') return 'AI'
-        if (v.startsWith('HS') || v.startsWith('HOME STATE')) return 'HS'
-        if (v.startsWith('OS') || v.startsWith('OTHER STATE')) return 'OS'
+        if (v === 'HS' || v === 'HOME STATE' || v === 'HOME STATE FOR GOA') return 'HS'
+        if (v === 'OS' || v === 'OTHER STATE') return 'OS'
+        // Special quotas: GO (Goa), JK (J&K), LA (Ladakh) — treat as HS for those states
+        if (v === 'GO') return home === 'goa' ? 'HS' : 'OTHER'
+        if (v === 'JK' || v === 'JAMMU & KASHMIR (UT)')
+          return home === 'j&k' || home === 'jammu & kashmir' ? 'HS' : 'OTHER'
+        if (v === 'LA' || v === 'LADAKH (UT)') return home === 'ladakh' ? 'HS' : 'OTHER'
+        // DASA is for foreign nationals — skip
+        if (v.startsWith('DASA')) return 'OTHER'
         return 'OTHER'
       }
 
       // Restrict to the exam's institute types (optionally narrowed further
       // by a caller-supplied instituteTypes filter).
-      const allowedTypes = instituteTypes && instituteTypes.length > 0
-        ? scope.filter((t: string) => instituteTypes.includes(t))
-        : scope
+      const allowedTypes =
+        instituteTypes && instituteTypes.length > 0
+          ? scope.filter((t: string) => instituteTypes.includes(t))
+          : scope
       // Reserved candidates are also eligible for OPEN (GEN) seats via CRL.
       const eligibleCats = category === 'GEN' ? ['GEN'] : [category, 'GEN']
       // Filter by counselling source (JoSAA vs CSAB) for JEE Main
       const counsellingSource = isJeeMain && counselling ? String(counselling).toUpperCase() : null
       const where: Record<string, unknown> = {
-        examType: 'JEE', year,
+        examType: 'JEE',
+        year,
         category: { in: eligibleCats },
         instituteType: { in: allowedTypes },
       }
@@ -239,12 +265,12 @@ export async function POST(req: NextRequest) {
         const stateMatch = !!home && (c.state ?? '').toLowerCase() === home
         if (qc === 'AI') return true
         if (qc === 'HS') return stateMatch
-        return !stateMatch  // OS: only when not the home state
+        return !stateMatch // OS: only when not the home state
       })
 
       // Dedup per institute+program+category+source+seatpool+quota — keep the
       // latest round (largest closing rank = the realistic "will I get it").
-      const bestMap = new Map<string, typeof filtered[0]>()
+      const bestMap = new Map<string, (typeof filtered)[0]>()
       for (const c of filtered) {
         const key = `${c.institute}||${c.program}||${c.category}||${c.source}||${c.gender}||${quotaClass(c.quota)}`
         const ex = bestMap.get(key)
@@ -256,18 +282,25 @@ export async function POST(req: NextRequest) {
       const isCsab = counsellingSource === 'CSAB'
       const haveCrl = crlForUser > 0
       const rankForRow = (c: { source: string | null; category: string }) =>
-        isCsab ? crlForCmp : (usesCrlRank(c.source, c.category) ? crlForCmp : catRank)
+        isCsab ? crlForCmp : usesCrlRank(c.source, c.category) ? crlForCmp : catRank
 
       const results = Array.from(bestMap.values())
         .map(c => {
           const cmpRank = rankForRow(c)
           const { chance, percent } = calculateChanceByRank(cmpRank, c.openRank, c.closeRank)
           const expandedProgram = expandProgramName(c.program)
-          const jeeMatch = branchFilter ? matchJeeBranch(expandedProgram, branchFilter) : { isPrimary: true, matches: true }
-          const isPrimary = jeeMatch.isPrimary || (branchFilter ? matchJeeBranch(c.program, branchFilter).isPrimary : true)
-          const seatType = (category !== 'GEN' && c.category === 'GEN')
-            ? 'Open (via CRL)'
-            : c.category === 'GEN' ? 'Open' : `${c.category} reserved`
+          const jeeMatch = branchFilter
+            ? matchJeeBranch(expandedProgram, branchFilter)
+            : { isPrimary: true, matches: true }
+          const isPrimary =
+            jeeMatch.isPrimary ||
+            (branchFilter ? matchJeeBranch(c.program, branchFilter).isPrimary : true)
+          const seatType =
+            category !== 'GEN' && c.category === 'GEN'
+              ? 'Open (via CRL)'
+              : c.category === 'GEN'
+                ? 'Open'
+                : `${c.category} reserved`
           return {
             institute: c.institute,
             program: expandedProgram,
@@ -284,14 +317,15 @@ export async function POST(req: NextRequest) {
             quota: quotaClass(c.quota),
             seatType,
             source: c.source ?? 'JOSAA',
-            rankBasis: usesCrlRank(c.source, c.category) ? 'CRL' : 'Category rank',
+            rankBasis: isCsab ? 'CRL' : usesCrlRank(c.source, c.category) ? 'CRL' : 'Category rank',
             round: c.round,
             year: c.year,
           }
         })
         // Drop CRL-basis seats the user can't be judged for (no CRL given).
-        .filter(c => c.chancePercent >= 5 &&
-          !(c.rankBasis === 'CRL' && !haveCrl && category !== 'GEN'))
+        .filter(
+          c => c.chancePercent >= 5 && !(c.rankBasis === 'CRL' && !haveCrl && category !== 'GEN')
+        )
         .sort((a, b) => {
           if (b.chancePercent !== a.chancePercent) return b.chancePercent - a.chancePercent
           return a.closeRank - b.closeRank
@@ -327,7 +361,6 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ error: `Unknown examType: ${examType}` }, { status: 400 })
-
   } catch (error) {
     console.error('Predict error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

@@ -6,62 +6,107 @@ datasource db {
   provider = "postgresql"
 }
 
+// ── NextAuth v5 required tables ──────────────────────────────────────────────
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ── App models ────────────────────────────────────────────────────────────────
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  phone     String?
-  createdAt DateTime @default(now())
-  payments  Payment[]
-  predictions Prediction[]
+  id            String       @id @default(cuid())
+  email         String       @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  phone         String?
+  createdAt     DateTime     @default(now())
+  accounts      Account[]
+  sessions      Session[]
+  payments      Payment[]
+  predictions   SavedPrediction[]
 }
 
 model Payment {
-  id              String   @id @default(cuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id])
-  razorpayOrderId String   @unique
-  razorpayPaymentId String? @unique
-  amount          Int
-  currency        String   @default("INR")
-  status          String   @default("created") // created | paid | failed
-  examType        String   // GATE | JEE
-  createdAt       DateTime @default(now())
+  id                String    @id @default(cuid())
+  userId            String?
+  user              User?     @relation(fields: [userId], references: [id])
+  razorpayOrderId   String    @unique
+  razorpayPaymentId String?   @unique
+  amount            Int
+  currency          String    @default("INR")
+  status            String    @default("created") // created | paid | failed
+  examType          String
+  reportPayload     Json?
+  reportFingerprint String?
+  accessToken       String?
+  paidAt            DateTime?
+  updatedAt         DateTime  @updatedAt @default(now())
+  createdAt         DateTime  @default(now())
 }
 
-model Prediction {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  examType  String   // GATE | JEE
-  score     Float
-  rank      Int?
-  category  String   // GEN | OBC | SC | ST | EWS
-  branch    String?  // for GATE
-  results   String   // JSON string of college list
-  createdAt DateTime @default(now())
+model SavedPrediction {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  examType     String   // GATE | JEE_MAIN_JOSAA | JEE_MAIN_CSAB | JEE_ADVANCED
+  counselling  String?  // JOSAA | CSAB (JEE Main only)
+  inputs       Json     // {score/rank, category, branch, homeState, gender, crlRank}
+  totalResults Int
+  accessToken  String   // JWT — lets user re-open full report
+  paidAt       DateTime
+  createdAt    DateTime @default(now())
 }
 
 model Cutoff {
-  id         String @id @default(cuid())
-  examType   String // GATE | JEE
-  year       Int
-  institute  String
-  program    String
-  category   String
-  round      Int    @default(1)
-  openRank   Int    @default(0)
-  closeRank  Int    @default(0)
-  openScore  Int?   // GATE score cutoff (COAP) — opening
-  closeScore Int?   // GATE score cutoff (COAP) — closing / last offered
-  paper      String? // GATE paper code (where published)
-  gender     String? // JEE: "Gender-Neutral" | "Female-only (including Supernumerary)"
-  quota      String? // JEE: AI | HS | OS | GO | JK | LA
-  source     String? // JEE: JOSAA | CSAB  (rank basis differs — see predictor)
-  state      String?
-  instituteType String? // NIT | IIT | IIIT | GFTI
-  updatedAt  DateTime @updatedAt
-  createdAt  DateTime @default(now())
+  id            String   @id @default(cuid())
+  examType      String
+  year          Int
+  institute     String
+  program       String
+  category      String
+  round         Int      @default(1)
+  openRank      Int      @default(0)
+  closeRank     Int      @default(0)
+  openScore     Int?
+  closeScore    Int?
+  paper         String?
+  gender        String?
+  quota         String?
+  source        String?
+  state         String?
+  instituteType String?
+  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now())
 }
 
 model Admin {
