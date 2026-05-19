@@ -134,12 +134,6 @@ export default function AdminPage() {
     loadCutoffs()
   }
 
-  const inputStyle = {
-    width: '100%', padding: '0.6rem 0.9rem', borderRadius: '8px', fontSize: '0.85rem',
-    background: 'var(--bg-1)', border: '1.5px solid var(--border-strong)',
-    color: 'var(--text)', fontFamily: 'Inter, sans-serif', outline: 'none',
-  }
-
   const cutoffFields: FieldConfig[] = [
     { key: 'examType', label: 'Exam', options: ['GATE', 'JEE'] },
     { key: 'year', label: 'Year' },

@@ -124,7 +124,7 @@ export function expandProgramName(raw: string): string {
   if (!raw) return raw
   
   // Strip common list prefixes like "a) ", "e) ", "iv) " from the raw string
-  let cleanedRaw = raw.replace(/^([a-z]|[ivx]+)\)\s+/i, '').trim()
+  const cleanedRaw = raw.replace(/^([a-z]|[ivx]+)\)\s+/i, '').trim()
 
   // Already a full name
   if (cleanedRaw.length > 10) return cleanedRaw

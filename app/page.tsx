@@ -1,16 +1,28 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
 
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
+
+async function getHomeStats() {
+  try {
+    const [countRows, instituteRows] = await Promise.all([
+      prisma.cutoff.aggregate({ _count: { id: true }, _max: { year: true } }),
+      prisma.cutoff.groupBy({ by: ['institute'] }),
+    ])
+
+    return {
+      totalCutoffs: countRows._count.id,
+      totalColleges: instituteRows.length,
+      year: countRows._max.year ?? 2025,
+    }
+  } catch (error) {
+    console.warn('Home stats unavailable:', error)
+    return { totalCutoffs: 0, totalColleges: 0, year: 2025 }
+  }
+}
 
 export default async function Home() {
-  const [countRows, instituteRows] = await Promise.all([
-    prisma.cutoff.aggregate({ _count: { id: true }, _max: { year: true } }),
-    prisma.cutoff.groupBy({ by: ['institute'] }),
-  ])
-  const totalCutoffs = countRows._count.id
-  const totalColleges = instituteRows.length
-  const year = countRows._max.year ?? 2025
+  const { totalCutoffs, totalColleges, year } = await getHomeStats()
 
   return (
     <div style={{ minHeight: '100vh' }}>

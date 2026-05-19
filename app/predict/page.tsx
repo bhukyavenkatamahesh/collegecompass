@@ -287,7 +287,6 @@ function PredictForm() {
   const isAdvanced = form.exam === 'JEE_ADVANCED'
   const isMain = form.exam === 'JEE_MAIN'
   const isCsab = isMain && form.counselling === 'CSAB'
-  const isJosaa = isMain && form.counselling === 'JOSAA'
   const chanceColor = (c:string) => c==='High'?'var(--ok,#1f9d6b)':c==='Medium'?'var(--accent)':'#e0483c'
   const chanceBg   = (c:string) => c==='High'?'rgba(31,157,107,0.12)':c==='Medium'?'var(--accent-bg)':'rgba(224,72,60,0.12)'
 
