@@ -9,6 +9,7 @@
     "lint": "eslint",
     "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
+    "import:cutoffs": "node --env-file=.env.local scripts/import-cutoffs.mjs",
     "test": "vitest run"
   },
   "dependencies": {
