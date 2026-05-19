@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const viewport: Viewport = {
-  themeColor: '#070b16',
+  themeColor: '#faf8f5',
   width: 'device-width',
   initialScale: 1,
 }
@@ -36,7 +36,10 @@ export default function RootLayout({
         <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <script src="https://checkout.razorpay.com/v1/checkout.js" async />
+      </body>
     </html>
   )
 }

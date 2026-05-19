@@ -4,181 +4,150 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
 interface College {
-  institute: string
-  program: string
-  instituteType: string
-  state: string
-  openRank: number
-  closeRank: number
-  openScore: number
-  closeScore: number
-  isInterdisciplinary?: boolean
-  seatPool?: string
-  quota?: string
-  seatType?: string
-  source?: string
-  rankBasis?: string
-  chance: 'High' | 'Medium' | 'Low'
-  chancePercent: number
+  institute: string; program: string; instituteType: string; state: string
+  openRank: number; closeRank: number; openScore: number; closeScore: number
+  isInterdisciplinary?: boolean; seatPool?: string; quota?: string
+  seatType?: string; source?: string; rankBasis?: string
+  chance: 'High'|'Medium'|'Low'; chancePercent: number
 }
 
+const BRANCH_MAP: Record<string,string> = { CS:'Computer Science', EC:'Electronics & Comm.', EE:'Electrical Engineering', ME:'Mechanical Engineering', CE:'Civil Engineering', CH:'Chemical Engineering', BT:'Biotechnology', MA:'Mathematics', DA:'Data Science & AI' }
+
+function chanceColor(c:string) { return c==='High'?'#166534':c==='Medium'?'#9a3412':'#991b1b' }
+function chanceBg(c:string)    { return c==='High'?'#dcfce7':c==='Medium'?'#fff7ed':'#fee2e2' }
+function chanceAccent(c:string){ return c==='High'?'#16a34a':c==='Medium'?'var(--accent)':'#ef4444' }
+
 function ResultsContent() {
-  const params = useSearchParams()
-  const exam = params.get('exam') || 'GATE'
-  const rank = params.get('rank') || ''
-  const score = params.get('score') || ''
-  const category = params.get('category') || 'GEN'
-  const branch = params.get('branch') || ''
-  const gender = params.get('gender') || 'Male'
-  const homeState = params.get('state') || ''
-  const crl = params.get('crl') || ''
-  const paid = params.get('paid') === 'true'
-  const isGate = exam === 'GATE'
-  const examLabel = exam === 'GATE' ? 'GATE' : exam === 'JEE_ADV' ? 'JEE Advanced' : 'JEE Main'
-  const rankLabel = isGate ? 'Score' : exam === 'JEE_ADV' ? 'JEE Adv Rank' : 'JEE Main Rank'
+  const p = useSearchParams()
+  const exam      = p.get('exam')      || 'GATE'
+  const rank      = p.get('rank')      || ''
+  const score     = p.get('score')     || rank
+  const category  = p.get('category') || 'GEN'
+  const branch    = p.get('branch')    || ''
+  const gender    = p.get('gender')    || 'Male'
+  const homeState = p.get('state')     || ''
+  const crl       = p.get('crl')       || ''
+  const paid      = p.get('paid')      === 'true'
+
+  const isGate   = exam === 'GATE'
+  const examLabel= exam==='GATE'?'GATE':exam==='JEE_ADVANCED'?'JEE Advanced':'JEE Main'
+  const rankLabel= isGate?'Score':exam==='JEE_ADVANCED'?'JEE Adv Rank':'JEE Main Rank'
   const displayVal = isGate ? score : rank
+  const displayBranch = BRANCH_MAP[branch] || branch
 
   const [colleges, setColleges] = useState<College[]>([])
-  const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'All' | 'High' | 'Medium' | 'Low'>('All')
+  const [loading, setLoading]   = useState(true)
+  const [filter, setFilter]     = useState<'All'|'High'|'Medium'|'Low'>('All')
   const [typeFilter, setTypeFilter] = useState('All')
   const [pdfLoading, setPdfLoading] = useState(false)
 
   useEffect(() => {
     if (!paid) return
-    fetch('/api/predict', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        examType: exam,
-        category,
-        branch,
-        ...(isGate
-          ? { score: parseInt(score) }
-          : {
-              rank: parseInt(rank),
-              crlRank: category === 'GEN' ? parseInt(rank) : (crl ? parseInt(crl) : undefined),
-              gender, homeState,
-            }),
-      })
-    })
-      .then(r => r.json())
-      .then(d => { setColleges(d.results || []); setLoading(false) })
-      .catch(() => setLoading(false))
+    const body: any = { examType:exam, category, branch, gender }
+    if (isGate) body.score = parseInt(score)
+    else { body.rank = parseInt(rank); if (crl) body.crl = parseInt(crl); body.homeState = homeState }
+    fetch('/api/predict', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) })
+      .then(r=>r.json())
+      .then(d=>{ setColleges(d.results||[]); setLoading(false) })
+      .catch(()=>setLoading(false))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const types = ['All', ...Array.from(new Set(colleges.map(c => c.instituteType)))]
-  const filtered = colleges.filter(c =>
-    (filter === 'All' || c.chance === filter) &&
-    (typeFilter === 'All' || c.instituteType === typeFilter)
-  )
+  const types    = ['All', ...Array.from(new Set(colleges.map(c=>c.instituteType)))]
+  const filtered = colleges.filter(c=>(filter==='All'||c.chance===filter)&&(typeFilter==='All'||c.instituteType===typeFilter))
+
+  const stats = { High:colleges.filter(c=>c.chance==='High').length, Medium:colleges.filter(c=>c.chance==='Medium').length, Low:colleges.filter(c=>c.chance==='Low').length }
 
   async function downloadPDF() {
     setPdfLoading(true)
     const { default: jsPDF } = await import('jspdf')
     const { default: autoTable } = await import('jspdf-autotable')
-    
     const doc = new jsPDF()
-    
-    // Header
-    doc.setFillColor(15, 22, 40)
-    doc.rect(0, 0, 210, 40, 'F')
-    doc.setTextColor(79, 110, 247)
-    doc.setFontSize(22)
-    doc.setFont('helvetica', 'bold')
-    doc.text('CollegeCompass', 14, 18)
-    doc.setTextColor(200, 200, 220)
-    doc.setFontSize(11)
-    doc.setFont('helvetica', 'normal')
-    doc.text(`${examLabel} College Prediction Report`, 14, 28)
-    
-    // Info box
-    doc.setFillColor(20, 28, 50)
-    doc.rect(0, 40, 210, 18, 'F')
-    doc.setTextColor(150, 170, 220)
-    doc.setFontSize(9)
-    doc.text(`${rankLabel}: ${displayVal}  |  Category: ${category}  |  Exam: ${examLabel}${branch ? '  |  Branch: '+branch : ''}  |  Total Colleges: ${filtered.length}`, 14, 51)
 
-    autoTable(doc, {
-      startY: 62,
-      head: [['#','Institute','Program','Type','State', isGate?'Min Score':'Open Rank', isGate?'Max Score':'Close Rank','Chance']],
-      body: filtered.map((c, i) => [i+1, c.institute, c.program, c.instituteType, c.state,
-        isGate ? Math.min(c.openScore, c.closeScore) : c.openRank,
-        isGate ? Math.max(c.openScore, c.closeScore) : c.closeRank,
-        `${c.chancePercent}% ${c.chance}`]),
-      headStyles: { fillColor: [79, 110, 247], textColor: 255, fontStyle: 'bold', fontSize: 8 },
-      bodyStyles: { fontSize: 8, textColor: [40, 40, 60] },
-      alternateRowStyles: { fillColor: [245, 247, 255] },
-      columnStyles: { 7: { fontStyle: 'bold' } },
-    })
+    // Header bar
+    doc.setFillColor(17,17,16); doc.rect(0,0,210,38,'F')
+    doc.setFontSize(20); doc.setFont('helvetica','bold'); doc.setTextColor(249,115,22); doc.text('collegecompass.',14,16)
+    doc.setFontSize(10); doc.setFont('helvetica','normal'); doc.setTextColor(200,190,180); doc.text(`${examLabel} College Prediction Report`,14,26)
 
-    doc.setFontSize(8)
-    doc.setTextColor(150)
-    doc.text('Generated by CollegeCompass | Data based on previous year cutoffs. Predictions are indicative only.', 14, doc.internal.pageSize.height - 10)
+    // Sub-header
+    doc.setFillColor(243,240,235); doc.rect(0,38,210,16,'F')
+    doc.setFontSize(8.5); doc.setTextColor(107,107,104)
+    doc.text(`${rankLabel}: ${displayVal}  |  Category: ${category}  |  Branch: ${displayBranch}  |  Matches: ${filtered.length}`,14,48)
 
-    doc.save(`CollegeCompass_${examLabel.replace(/ /g,'')}_${displayVal}_${category}.pdf`)
+    const head = isGate ? [['#','Institute','Program','Type','Min Score','Max Score','Probability']] : [['#','Institute','Program','Type','Open Rank','Close Rank','Probability']]
+    const body = filtered.map((c,i)=>[
+      i+1, c.institute,
+      c.program+(c.isInterdisciplinary?' ⤷ Interdisciplinary':''),
+      c.instituteType,
+      isGate ? Math.min(c.openScore,c.closeScore) : c.openRank?.toLocaleString(),
+      isGate ? Math.max(c.openScore,c.closeScore) : c.closeRank?.toLocaleString(),
+      `${c.chancePercent}% ${c.chance}`
+    ])
+    autoTable(doc, { startY:58, head, body,
+      headStyles:{ fillColor:[17,17,16], textColor:255, fontStyle:'bold', fontSize:7.5 },
+      bodyStyles:{ fontSize:7.5, textColor:[40,40,40] },
+      alternateRowStyles:{ fillColor:[248,246,243] },
+      columnStyles:{ 6:{ fontStyle:'bold' } } })
+    doc.setFontSize(7.5); doc.setTextColor(155,155,152)
+    doc.text('Generated by CollegeCompass · Indicative only — verify on official counselling portals.', 14, doc.internal.pageSize.height-9)
+    doc.save(`CollegeCompass_${examLabel.replace(' ','_')}_${category}.pdf`)
     setPdfLoading(false)
   }
 
-  const chanceColor = (c: string) => c==='High'?'var(--accent2)':c==='Medium'?'var(--accent3)':'#f74f4f'
-  const chanceBg = (c: string) => c==='High'?'rgba(56,201,160,0.1)':c==='Medium'?'rgba(247,133,79,0.1)':'rgba(247,79,79,0.1)'
-
   if (!paid) return (
-    <div style={{minHeight:'100vh',background:'var(--bg)',display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:'1rem'}}>
-      <div style={{fontSize:'3rem'}}>🔒</div>
-      <h2 style={{fontFamily:'Syne',fontWeight:800}}>Access Denied</h2>
-      <p style={{color:'var(--text-muted)'}}>Please complete payment to view results.</p>
-      <Link href="/predict" className="btn-primary" style={{padding:'0.75rem 1.5rem',borderRadius:'10px',textDecoration:'none'}}>Go to Predictor</Link>
+    <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:'1rem', background:'var(--bg)' }}>
+      <div style={{ fontSize:'3rem' }}>🔒</div>
+      <h2 style={{ fontSize:'1.5rem' }}>Access denied</h2>
+      <p style={{ color:'var(--text-muted)' }}>Please complete payment to view your results.</p>
+      <Link href="/predict" className="btn btn-primary" style={{ marginTop:'0.5rem' }}>Go to Predictor →</Link>
     </div>
   )
 
-  const branchMap: Record<string, string> = {
-    'CS': 'Computer Science', 'EC': 'Electronics', 'EE': 'Electrical',
-    'ME': 'Mechanical', 'CE': 'Civil', 'CH': 'Chemical', 'BT': 'Biotechnology',
-    'MA': 'Mathematics', 'DA': 'Data Science'
-  }
-  const displayBranch = exam === 'GATE' && branchMap[branch] ? branchMap[branch] : branch
-
   return (
-    <div style={{minHeight:'100vh',background:'var(--bg)',padding:'2rem'}}>
-      {/* Header */}
-      <div style={{maxWidth:'1100px',margin:'0 auto'}}>
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'2rem',flexWrap:'wrap',gap:'1rem'}}>
-          <div>
-            <Link href="/" style={{color:'var(--text-muted)',textDecoration:'none',fontSize:'0.85rem'}}>← Home</Link>
-            <h1 style={{fontFamily:'Syne',fontWeight:800,fontSize:'1.8rem',marginTop:'0.5rem'}}>
-              Your <span className="gradient-text">{examLabel} Results</span>
-            </h1>
-            <p style={{color:'var(--text-muted)',marginTop:'0.25rem',fontSize:'0.9rem'}}>
-              {rankLabel} <strong style={{color:'var(--text)'}}>{displayVal}</strong> • {category}{!isGate && ` • ${gender}${homeState ? ' • '+homeState : ''}`} • {displayBranch || 'All Branches'} • {colleges.length} colleges found
-            </p>
-          </div>
-          <button onClick={downloadPDF} disabled={pdfLoading} className="btn-primary"
-            style={{padding:'0.75rem 1.5rem',borderRadius:'10px',fontSize:'0.9rem',display:'flex',alignItems:'center',gap:'0.5rem',border:'none'}}>
-            {pdfLoading ? '⏳ Generating...' : '⬇ Download PDF Report'}
+    <div style={{ minHeight:'100vh', background:'var(--bg)' }}>
+      {/* Nav */}
+      <div className="nav-wrapper">
+        <nav className="nav">
+          <Link href="/" className="nav-logo">college<span style={{color:'var(--accent)'}}>compass</span>.</Link>
+          <div style={{ fontSize:'0.85rem', color:'var(--text-muted)' }}>Your {examLabel} Results</div>
+          <button onClick={downloadPDF} disabled={pdfLoading} className="btn btn-ghost btn-sm" style={{ display:'flex', alignItems:'center', gap:'0.4rem' }}>
+            {pdfLoading ? '⏳ Generating…' : '↓ Download PDF'}
           </button>
+        </nav>
+      </div>
+
+      <div className="container" style={{ paddingTop:'3rem', paddingBottom:'5rem' }}>
+
+        {/* Page header */}
+        <div className="fade-up" style={{ marginBottom:'2.5rem' }}>
+          <div className="pill" style={{ marginBottom:'0.9rem' }}>Results ready</div>
+          <h1 style={{ fontSize:'clamp(1.9rem,4.5vw,3rem)', marginBottom:'0.5rem' }}>
+            Your <span className="gradient-text">{examLabel}</span> Matrix
+          </h1>
+          <p style={{ color:'var(--text-muted)', fontSize:'0.95rem' }}>
+            {rankLabel} <strong style={{ color:'var(--text)' }}>{displayVal}</strong> · {category} · {displayBranch || 'All branches'} · <strong style={{ color:'var(--text)' }}>{colleges.length}</strong> colleges matched
+          </p>
         </div>
 
-        {/* Summary cards */}
-        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'1rem',marginBottom:'2rem'}}>
-          {(['High','Medium','Low'] as const).map(ch => (
-            <div key={ch} className="glass" style={{padding:'1rem 1.25rem',borderRadius:'12px',cursor:'pointer',
-              border:`1px solid ${filter===ch?chanceColor(ch):'var(--border)'}`,transition:'all 0.2s'}}
-              onClick={() => setFilter(filter===ch?'All':ch)}>
-              <div style={{color:chanceColor(ch),fontFamily:'Syne',fontWeight:700,fontSize:'1.5rem'}}>
-                {colleges.filter(c=>c.chance===ch).length}
-              </div>
-              <div style={{color:'var(--text-muted)',fontSize:'0.8rem',marginTop:'0.25rem'}}>{ch} Chance Colleges</div>
+        {/* Chance summary cards */}
+        <div className="fade-up" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))', gap:'1rem', marginBottom:'2rem' }}>
+          {(['High','Medium','Low'] as const).map(ch=>(
+            <div key={ch} onClick={()=>setFilter(filter===ch?'All':ch)}
+              className="glass glass-hover"
+              style={{ padding:'1.4rem', borderRadius:'var(--r)', cursor:'pointer', border:filter===ch?`1.5px solid ${chanceAccent(ch)}`:'1px solid var(--border)', transition:'all .2s' }}>
+              <div style={{ fontSize:'2rem', fontWeight:900, fontFamily:'Satoshi,Inter,sans-serif', color:chanceAccent(ch), letterSpacing:'-0.04em', lineHeight:1 }}>{stats[ch]}</div>
+              <div style={{ fontSize:'0.78rem', color:'var(--text-muted)', fontWeight:600, marginTop:'0.35rem', textTransform:'uppercase', letterSpacing:'0.05em', fontFamily:'Satoshi,Inter,sans-serif' }}>{ch} Chance</div>
             </div>
           ))}
         </div>
 
-        {/* Filters */}
-        <div style={{display:'flex',gap:'0.5rem',marginBottom:'1.5rem',flexWrap:'wrap'}}>
-          {types.map(t => (
-            <button key={t} onClick={() => setTypeFilter(t)}
-              style={{padding:'0.4rem 1rem',borderRadius:'8px',cursor:'pointer',fontSize:'0.85rem',fontFamily:'Syne',fontWeight:600,border:'none',transition:'all 0.2s',
-                background:typeFilter===t?'var(--accent)':'rgba(255,255,255,0.05)',color:typeFilter===t?'white':'var(--text-muted)'}}>
+        {/* Type filter pills */}
+        <div className="fade-up" style={{ display:'flex', gap:'0.5rem', flexWrap:'wrap', marginBottom:'1.6rem' }}>
+          {types.map(t=>(
+            <button key={t} onClick={()=>setTypeFilter(t)} style={{ padding:'0.38rem 0.95rem', borderRadius:99, cursor:'pointer', fontFamily:'Satoshi,Inter,sans-serif', fontWeight:600, fontSize:'0.82rem', border:'1.5px solid', transition:'all .18s',
+              background:typeFilter===t?'var(--text)':'var(--bg-1)',
+              borderColor:typeFilter===t?'var(--text)':'var(--border-strong)',
+              color:typeFilter===t?'#fff':'var(--text-muted)' }}>
               {t}
             </button>
           ))}
@@ -186,80 +155,58 @@ function ResultsContent() {
 
         {/* Table */}
         {loading ? (
-          <div style={{textAlign:'center',padding:'4rem',color:'var(--text-muted)'}}>Loading predictions...</div>
+          <div className="glass" style={{ padding:'5rem', textAlign:'center', borderRadius:'var(--r-lg)' }}>
+            <div style={{ fontSize:'1.5rem', marginBottom:'0.8rem' }}>⚡</div>
+            <div style={{ color:'var(--text-muted)' }}>Matching against official cutoffs…</div>
+          </div>
         ) : (
-          <div className="glass" style={{borderRadius:'16px',overflow:'hidden'}}>
-            <table style={{width:'100%',borderCollapse:'collapse'}}>
-              <thead>
-                <tr style={{background:'rgba(79,110,247,0.1)',borderBottom:'1px solid var(--border)'}}>
-                  <th style={{padding:'0.875rem 1rem',textAlign:'left',fontFamily:'Syne',fontWeight:600,fontSize:'0.8rem',color:'var(--text-muted)',letterSpacing:'0.04em'}}>#</th>
-                  <th style={{padding:'0.875rem 1rem',textAlign:'left',fontFamily:'Syne',fontWeight:600,fontSize:'0.8rem',color:'var(--text-muted)',letterSpacing:'0.04em'}}>Institute</th>
-                  <th style={{padding:'0.875rem 1rem',textAlign:'left',fontFamily:'Syne',fontWeight:600,fontSize:'0.8rem',color:'var(--text-muted)',letterSpacing:'0.04em'}}>Program</th>
-                  <th style={{padding:'0.875rem 1rem',textAlign:'left',fontFamily:'Syne',fontWeight:600,fontSize:'0.8rem',color:'var(--text-muted)',letterSpacing:'0.04em'}}>Type</th>
-                  <th style={{padding:'0.875rem 1rem',textAlign:'left',fontFamily:'Syne',fontWeight:600,fontSize:'0.8rem',color:'var(--text-muted)',letterSpacing:'0.04em'}}>State</th>
-                  {exam === 'GATE' ? (
-                    <>
-                      <th style={{padding:'0.875rem 1rem',textAlign:'left',fontFamily:'Syne',fontWeight:600,fontSize:'0.8rem',color:'var(--text-muted)',letterSpacing:'0.04em'}}>Min Score</th>
-                      <th style={{padding:'0.875rem 1rem',textAlign:'left',fontFamily:'Syne',fontWeight:600,fontSize:'0.8rem',color:'var(--text-muted)',letterSpacing:'0.04em'}}>Max Score</th>
-                    </>
-                  ) : (
-                    <>
-                      <th style={{padding:'0.875rem 1rem',textAlign:'left',fontFamily:'Syne',fontWeight:600,fontSize:'0.8rem',color:'var(--text-muted)',letterSpacing:'0.04em'}}>Open Rank</th>
-                      <th style={{padding:'0.875rem 1rem',textAlign:'left',fontFamily:'Syne',fontWeight:600,fontSize:'0.8rem',color:'var(--text-muted)',letterSpacing:'0.04em'}}>Close Rank</th>
-                    </>
-                  )}
-                  <th style={{padding:'0.875rem 1rem',textAlign:'left',fontFamily:'Syne',fontWeight:600,fontSize:'0.8rem',color:'var(--text-muted)',letterSpacing:'0.04em'}}>Chance</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((c, i) => (
-                  <tr key={i} style={{borderBottom:'1px solid rgba(99,140,255,0.06)',transition:'background 0.15s'}}
-                    onMouseEnter={e=>(e.currentTarget.style.background='rgba(79,110,247,0.04)')}
-                    onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
-                    <td style={{padding:'0.875rem 1rem',color:'var(--text-muted)',fontSize:'0.85rem'}}>{i+1}</td>
-                    <td style={{padding:'0.875rem 1rem',fontWeight:500,fontSize:'0.9rem'}}>{c.institute}</td>
-                    <td style={{padding:'0.875rem 1rem',color:'var(--text-muted)',fontSize:'0.85rem'}}>
-                      {c.program}
-                      {c.isInterdisciplinary && <div style={{fontSize:'0.7rem',color:'var(--accent)',marginTop:'0.2rem'}}>Interdisciplinary</div>}
-                      {!isGate && (c.seatPool || c.quota) && (
-                        <div style={{fontSize:'0.7rem',color:c.seatPool==='Female-only'?'#f78fb3':'var(--text-muted)',marginTop:'0.2rem'}}>
-                          {c.seatType}{c.quota ? ` · ${c.quota}` : ''} · {c.seatPool} · {c.source}
-                          <span style={{color:'var(--text-muted)'}}> · by {c.rankBasis}</span>
-                        </div>
-                      )}
-                    </td>
-                    <td style={{padding:'0.875rem 1rem'}}>
-                      <span style={{background:'rgba(255,255,255,0.06)',padding:'0.2rem 0.5rem',borderRadius:'5px',fontSize:'0.75rem',color:'var(--text-muted)'}}>{c.instituteType}</span>
-                    </td>
-                    <td style={{padding:'0.875rem 1rem',color:'var(--text-muted)',fontSize:'0.85rem'}}>{c.state}</td>
-                    {exam === 'GATE' ? (
-                      <>
-                        <td style={{padding:'0.875rem 1rem',fontSize:'0.85rem'}}>{Math.min(c.openScore, c.closeScore)}</td>
-                        <td style={{padding:'0.875rem 1rem',fontSize:'0.85rem'}}>{Math.max(c.openScore, c.closeScore)}</td>
-                      </>
-                    ) : (
-                      <>
-                        <td style={{padding:'0.875rem 1rem',fontSize:'0.85rem'}}>{c.openRank?.toLocaleString()}</td>
-                        <td style={{padding:'0.875rem 1rem',fontSize:'0.85rem'}}>{c.closeRank?.toLocaleString()}</td>
-                      </>
-                    )}
-                    <td style={{padding:'0.875rem 1rem'}}>
-                      <span style={{background:chanceBg(c.chance),color:chanceColor(c.chance),padding:'0.3rem 0.75rem',borderRadius:'8px',fontSize:'0.8rem',fontWeight:600,fontFamily:'Syne',whiteSpace:'nowrap'}}>
-                        {c.chancePercent}% {c.chance}
-                      </span>
-                    </td>
+          <div className="glass fade-up" style={{ borderRadius:'var(--r-lg)', overflow:'hidden', boxShadow:'var(--shadow-md)' }}>
+            <div style={{ overflowX:'auto' }}>
+              <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'0.875rem', textAlign:'left' }}>
+                <thead>
+                  <tr style={{ background:'var(--bg-muted)', borderBottom:'1px solid var(--border)' }}>
+                    {['#','Institute','Program','Type','State', isGate?'Min Score':'Open Rank', isGate?'Max Score':'Close Rank','Probability'].map(h=>(
+                      <th key={h} style={{ padding:'0.9rem 1rem', fontFamily:'Satoshi,Inter,sans-serif', fontWeight:700, fontSize:'0.75rem', textTransform:'uppercase', letterSpacing:'0.06em', color:'var(--text-muted)', whiteSpace:'nowrap' }}>{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            {filtered.length === 0 && (
-              <div style={{textAlign:'center',padding:'3rem',color:'var(--text-muted)'}}>No colleges found for selected filters.</div>
-            )}
+                </thead>
+                <tbody>
+                  {filtered.map((c,i)=>(
+                    <tr key={i} style={{ borderBottom:'1px solid var(--border)' }}
+                      onMouseEnter={e=>(e.currentTarget.style.background='var(--bg-muted)')}
+                      onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
+                      <td style={{ padding:'0.9rem 1rem', color:'var(--text-faint)', fontVariantNumeric:'tabular-nums' }}>{i+1}</td>
+                      <td style={{ padding:'0.9rem 1rem', fontWeight:600, fontFamily:'Satoshi,Inter,sans-serif', minWidth:180 }}>{c.institute}</td>
+                      <td style={{ padding:'0.9rem 1rem', color:'var(--text-muted)', minWidth:160 }}>
+                        {c.program}
+                        {c.isInterdisciplinary && <div style={{ fontSize:'0.7rem', color:'var(--accent)', fontWeight:700, marginTop:'0.15rem' }}>Interdisciplinary ↗</div>}
+                      </td>
+                      <td style={{ padding:'0.9rem 1rem' }}>
+                        <span className="tag">{c.instituteType}</span>
+                      </td>
+                      <td style={{ padding:'0.9rem 1rem', color:'var(--text-muted)', whiteSpace:'nowrap' }}>{c.state}</td>
+                      <td style={{ padding:'0.9rem 1rem', fontVariantNumeric:'tabular-nums' }}>{isGate ? Math.min(c.openScore,c.closeScore) : c.openRank?.toLocaleString()}</td>
+                      <td style={{ padding:'0.9rem 1rem', fontVariantNumeric:'tabular-nums' }}>{isGate ? Math.max(c.openScore,c.closeScore) : c.closeRank?.toLocaleString()}</td>
+                      <td style={{ padding:'0.9rem 1rem' }}>
+                        <span style={{ background:chanceBg(c.chance), color:chanceColor(c.chance), borderRadius:8, padding:'0.28rem 0.7rem', fontSize:'0.78rem', fontWeight:700, fontFamily:'Satoshi,Inter,sans-serif', whiteSpace:'nowrap' }}>
+                          {c.chancePercent}% {c.chance}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {filtered.length === 0 && (
+                    <tr><td colSpan={8} style={{ padding:'4rem', textAlign:'center', color:'var(--text-muted)' }}>No colleges match the selected filters.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
-        <p style={{marginTop:'1.5rem',color:'var(--text-muted)',fontSize:'0.8rem',textAlign:'center'}}>
-          ⚠️ Predictions are based on previous year cutoffs and are indicative only. Actual cutoffs may vary.
+        {/* Footer note */}
+        <p style={{ marginTop:'1.5rem', fontSize:'0.78rem', color:'var(--text-faint)', lineHeight:1.7 }}>
+          Predictions are indicative and based on previous-year cutoffs. Always verify on the official counselling portal before making decisions.
+          <Link href="/predict" style={{ marginLeft:'0.5rem', color:'var(--accent)', fontWeight:600 }}>← Start a new prediction</Link>
         </p>
       </div>
     </div>
@@ -268,7 +215,7 @@ function ResultsContent() {
 
 export default function ResultsPage() {
   return (
-    <Suspense fallback={<div style={{minHeight:'100vh',background:'var(--bg)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--text-muted)'}}>Loading...</div>}>
+    <Suspense fallback={<div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text-muted)' }}>Loading…</div>}>
       <ResultsContent />
     </Suspense>
   )
