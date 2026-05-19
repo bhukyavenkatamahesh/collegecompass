@@ -179,34 +179,34 @@ export default async function Home() {
             </p>
           </div>
 
-          <div className="grid-2" style={{ alignItems: 'stretch', gap: '1.5rem' }}>
+          <div className="grid-2" style={{ alignItems: 'stretch', gap: '1.5rem', maxWidth: 780, margin: '0 auto' }}>
             {/* Free tier */}
-            <div className="glass" style={{ borderRadius: 'var(--r-lg)', padding: '2.4rem', background: 'var(--bg-muted)', border: '1px solid var(--border)' }}>
-              <div style={{ fontFamily: 'Satoshi,Inter,sans-serif', fontWeight: 800, fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '1.4rem' }}>
+            <div className="glass" style={{ borderRadius: 'var(--r-lg)', padding: '1.8rem', background: 'var(--bg-muted)', border: '1px solid var(--border)' }}>
+              <div style={{ fontFamily: 'Satoshi,Inter,sans-serif', fontWeight: 800, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '1rem' }}>
                 ✦ Free Preview
               </div>
-              <div style={{ fontFamily: 'Satoshi,Inter,sans-serif', fontWeight: 900, fontSize: '2.4rem', letterSpacing: '-0.05em', marginBottom: '0.4rem' }}>₹0</div>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginBottom: '1.8rem' }}>No credit card. No signup.</p>
-              <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '2rem' }}>
+              <div style={{ fontFamily: 'Satoshi,Inter,sans-serif', fontWeight: 900, fontSize: '2rem', letterSpacing: '-0.05em', marginBottom: '0.3rem' }}>₹0</div>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginBottom: '1.4rem' }}>No credit card. No signup.</p>
+              <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.65rem', marginBottom: '1.8rem' }}>
                 {['Top 3 college matches', 'Real {year} cutoff per college', 'Category & exam aware'.replace('{year}', year.toString())].map(f => (
-                  <li key={f} style={{ display: 'flex', gap: '0.55rem', color: 'var(--text-muted)', fontSize: '0.9rem', alignItems: 'flex-start' }}>
+                  <li key={f} style={{ display: 'flex', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem', alignItems: 'flex-start' }}>
                     <span className="emph" style={{ flexShrink: 0, marginTop: '0.1rem' }}>✓</span>{f}
                   </li>
                 ))}
               </ul>
-              <Link href="/predict" className="btn btn-ghost" style={{ width: '100%', borderRadius: 12 }}>Try it free →</Link>
+              <Link href="/predict" className="btn btn-ghost btn-sm" style={{ width: '100%', borderRadius: 12 }}>Try it free →</Link>
             </div>
 
             {/* Paid tier */}
-            <div className="card-dark" style={{ padding: '2.4rem' }}>
-              <span className="badge-accent">Full Report</span>
-              <div style={{ margin: '1.3rem 0 0.3rem', fontFamily: 'Satoshi,Inter,sans-serif', fontWeight: 900, fontSize: '2.8rem', letterSpacing: '-0.05em', color: '#fff' }}>
-                ₹49 <span style={{ fontSize: '1rem', fontWeight: 500 }} className="muted-d">one-time</span>
+            <div className="card-dark" style={{ padding: '1.8rem' }}>
+              <span className="badge-accent" style={{ fontSize: '0.7rem', padding: '0.2rem 0.6rem' }}>Full Report</span>
+              <div style={{ margin: '1rem 0 0.2rem', fontFamily: 'Satoshi,Inter,sans-serif', fontWeight: 900, fontSize: '2.4rem', letterSpacing: '-0.05em', color: '#fff' }}>
+                ₹49 <span style={{ fontSize: '0.85rem', fontWeight: 500 }} className="muted-d">one-time</span>
               </div>
-              <p className="muted-d" style={{ fontSize: '0.9rem', marginBottom: '1.6rem', lineHeight: 1.65 }}>
+              <p className="muted-d" style={{ fontSize: '0.82rem', marginBottom: '1.4rem', lineHeight: 1.5 }}>
                 Everything you need to walk into counselling with total confidence.
               </p>
-              <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '2rem' }}>
+              <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.65rem', marginBottom: '1.8rem' }}>
                 {[
                   'Full ranked list with chance %',
                   'Home-state, gender & quota aware',
@@ -214,15 +214,15 @@ export default async function Home() {
                   'Downloadable PDF report',
                   'Instant — no account needed',
                 ].map(f => (
-                  <li key={f} style={{ display: 'flex', gap: '0.6rem', fontSize: '0.92rem', color: '#f3ede8', alignItems: 'flex-start' }}>
+                  <li key={f} style={{ display: 'flex', gap: '0.5rem', fontSize: '0.85rem', color: '#f3ede8', alignItems: 'flex-start' }}>
                     <span className="emph" style={{ flexShrink: 0, marginTop: '0.1rem' }}>✓</span>{f}
                   </li>
                 ))}
               </ul>
-              <Link href="/predict" className="btn btn-accent" style={{ width: '100%', borderRadius: 12, fontSize: '1rem', padding: '0.9rem' }}>
+              <Link href="/predict" className="btn btn-accent btn-sm" style={{ width: '100%', borderRadius: 12 }}>
                 Get your prediction →
               </Link>
-              <div className="muted-d" style={{ marginTop: '0.9rem', fontSize: '0.75rem', textAlign: 'center' }}>🔒 Secure payment via Razorpay</div>
+              <div className="muted-d" style={{ marginTop: '0.7rem', fontSize: '0.7rem', textAlign: 'center' }}>🔒 Secure payment via Razorpay</div>
             </div>
           </div>
         </div>
@@ -259,8 +259,8 @@ export default async function Home() {
           </div>
         </div>
         {/* Brand wordmark */}
-        <div style={{ overflow: 'hidden', textAlign: 'center', height: 'clamp(4rem,14vw,12rem)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <span style={{ fontFamily: 'Satoshi,Inter,sans-serif', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 0.78, fontSize: 'clamp(5.5rem,22vw,20rem)', color: 'transparent', background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 50%, transparent 95%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', userSelect: 'none', whiteSpace: 'nowrap' }}>collegecompass.</span>
+        <div style={{ overflow: 'hidden', textAlign: 'center', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <span style={{ display: 'inline-block', fontFamily: 'Satoshi,Inter,sans-serif', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 0.9, fontSize: 'clamp(3rem,13vw,17rem)', color: 'transparent', WebkitTextFillColor: 'transparent', background: 'linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.1) 60%, transparent 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', userSelect: 'none', whiteSpace: 'nowrap', padding: '1rem 0' }}>collegecompass.</span>
         </div>
       </footer>
 
