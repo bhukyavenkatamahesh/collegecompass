@@ -32,6 +32,14 @@ coverage/
 
 # Databases
 dev.db
+prisma/dev.db
+
+# Claude / AI config
+.claude/
+AGENTS.md
+
+# Dev-only scripts (scraping, seeding, imports)
+scripts/
 
 # Data files (raw/large data)
 data/raw/
