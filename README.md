@@ -77,17 +77,23 @@ git push origin feature/my-feature
 
 ## 🔑 Environment Variables
 
-| Variable                      | Description                  | Required                |
-| ----------------------------- | ---------------------------- | ----------------------- |
-| `DATABASE_URL`                | Supabase PostgreSQL URI      | ✅                      |
-| `NEXTAUTH_SECRET`             | NextAuth signing secret      | ✅                      |
-| `RAZORPAY_KEY_ID`             | Razorpay public key          | ✅                      |
-| `RAZORPAY_KEY_SECRET`         | Razorpay secret key          | ✅                      |
-| `NEXT_PUBLIC_RAZORPAY_KEY_ID` | Razorpay public key (client) | ✅                      |
-| `ADMIN_EMAIL`                 | Admin panel login email      | ✅                      |
-| `ADMIN_PASSWORD`              | Admin panel login password   | ✅                      |
-| `GATE_PRICE`                  | GATE report price in paise   | optional (default 4900) |
-| `JEE_PRICE`                   | JEE report price in paise    | optional (default 4900) |
+| Variable                      | Description                           | Required     |
+| ----------------------------- | ------------------------------------- | ------------ |
+| `DATABASE_URL`                | Supabase pooler URI (?pgbouncer=true) | ✅           |
+| `DIRECT_URL`                  | Supabase direct URI (for migrations)  | ✅           |
+| `AUTH_SECRET`                 | NextAuth v5 signing secret            | ✅           |
+| `AUTH_URL`                    | App base URL (http://localhost:3000)  | ✅           |
+| `AUTH_TRUST_HOST`             | Set to `true` for non-HTTPS hosts     | ✅           |
+| `NEXTAUTH_SECRET`             | Same as AUTH_SECRET (v4 compat)       | ✅           |
+| `GOOGLE_CLIENT_ID`            | Google OAuth client ID                | ✅           |
+| `GOOGLE_CLIENT_SECRET`        | Google OAuth client secret            | ✅           |
+| `RAZORPAY_KEY_ID`             | Razorpay key (server)                 | ✅           |
+| `RAZORPAY_KEY_SECRET`         | Razorpay secret key                   | ✅           |
+| `NEXT_PUBLIC_RAZORPAY_KEY_ID` | Razorpay key (client bundle)          | ✅           |
+| `ADMIN_EMAIL`                 | Admin panel login email               | ✅           |
+| `ADMIN_PASSWORD`              | Admin panel login password            | ✅           |
+| `GATE_PRICE`                  | GATE report price in paise            | default 4900 |
+| `JEE_PRICE`                   | JEE report price in paise             | default 4900 |
 
 Copy `.env.example` → `.env.local` for local dev.  
 Add the same variables in **Vercel Dashboard > Project Settings > Environment Variables** for production.
@@ -96,9 +102,9 @@ Add the same variables in **Vercel Dashboard > Project Settings > Environment Va
 
 ## 🗄️ Database
 
-**ORM:** Prisma v7  
-**Local dev:** SQLite (`dev.db`)  
-**Production:** PostgreSQL (Supabase)
+**ORM:** Prisma v7 with `@prisma/adapter-pg`  
+**Database:** PostgreSQL (Supabase) — both dev and production  
+**Connection:** PgBouncer pooler (`DATABASE_URL`) + direct (`DIRECT_URL` for migrations)
 
 ```bash
 # Push schema to DB

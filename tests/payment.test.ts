@@ -12,7 +12,15 @@ vi.mock('@/lib/db', () => ({
       findUnique: dbMock.paymentFindUnique,
       update: dbMock.paymentUpdate,
     },
+    savedPrediction: {
+      findFirst: vi.fn().mockResolvedValue(null),
+      create: vi.fn().mockResolvedValue({}),
+    },
   },
+}))
+
+vi.mock('@/lib/auth-config', () => ({
+  auth: vi.fn().mockResolvedValue(null),
 }))
 
 import { POST } from '@/app/api/payment/verify/route'
@@ -116,7 +124,7 @@ describe('payment verification', () => {
           razorpayPaymentId,
           status: 'paid',
           reportFingerprint: expect.any(String),
-          accessTokenHash: expect.any(String),
+          accessToken: expect.any(String),
           paidAt: expect.any(Date),
         }),
       })
