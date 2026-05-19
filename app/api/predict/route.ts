@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
       homeState = '',    // JEE only: candidate's home state (for NIT/GFTI HS quota)
       crlRank,           // JEE only: All-India CRL (needed for OPEN seats & CSAB)
       crl,               // backwards-compatible alias used by older clients
+      counselling,       // JEE Main only: 'JOSAA' | 'CSAB'
       accessToken,
     } = body
 
@@ -209,11 +210,14 @@ export async function POST(req: NextRequest) {
         : scope
       // Reserved candidates are also eligible for OPEN (GEN) seats via CRL.
       const eligibleCats = category === 'GEN' ? ['GEN'] : [category, 'GEN']
+      // Filter by counselling source (JoSAA vs CSAB) for JEE Main
+      const counsellingSource = isJeeMain && counselling ? String(counselling).toUpperCase() : null
       const where: Record<string, unknown> = {
         examType: 'JEE', year,
         category: { in: eligibleCats },
         instituteType: { in: allowedTypes },
       }
+      if (counsellingSource) where.source = counsellingSource
       if (round) where.round = round
 
       const allCutoffs = await prisma.cutoff.findMany({ where })
@@ -248,9 +252,11 @@ export async function POST(req: NextRequest) {
       }
 
       // Pick the correct rank to compare for each row.
+      // CSAB always uses CRL for all seats (open + reserved).
+      const isCsab = counsellingSource === 'CSAB'
       const haveCrl = crlForUser > 0
       const rankForRow = (c: { source: string | null; category: string }) =>
-        usesCrlRank(c.source, c.category) ? crlForCmp : catRank
+        isCsab ? crlForCmp : (usesCrlRank(c.source, c.category) ? crlForCmp : catRank)
 
       const results = Array.from(bestMap.values())
         .map(c => {

@@ -122,14 +122,18 @@ const PROGRAM_CODE_MAP: Record<string, string> = {
  */
 export function expandProgramName(raw: string): string {
   if (!raw) return raw
+  
+  // Strip common list prefixes like "a) ", "e) ", "iv) " from the raw string
+  let cleanedRaw = raw.replace(/^([a-z]|[ivx]+)\)\s+/i, '').trim()
+
   // Already a full name
-  if (raw.length > 10) return raw
+  if (cleanedRaw.length > 10) return cleanedRaw
 
   // Direct match first
-  if (PROGRAM_CODE_MAP[raw]) return PROGRAM_CODE_MAP[raw]
+  if (PROGRAM_CODE_MAP[cleanedRaw]) return PROGRAM_CODE_MAP[cleanedRaw]
 
   // Strip trailing *
-  const clean = raw.replace(/\*$/, '')
+  const clean = cleanedRaw.replace(/\*$/, '')
   if (PROGRAM_CODE_MAP[clean]) return PROGRAM_CODE_MAP[clean]
 
   // Strip trailing digit + N/Y suffix (e.g. CE2N → CE, ME3Y → ME, MA1Y → MA)

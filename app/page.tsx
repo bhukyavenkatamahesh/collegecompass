@@ -84,34 +84,44 @@ export default async function Home() {
           <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '3rem', fontSize: '1.05rem' }}>
             We handle different counselling rules for each — no manual lookup.
           </p>
-          <div className="grid-2" style={{ maxWidth: 820, margin: '0 auto', gap: '1.5rem' }}>
+          <div className="grid-3" style={{ maxWidth: 1080, margin: '0 auto', gap: '1.5rem' }}>
             {[
               {
                 exam: 'GATE', emoji: '🎓',
-                label: 'M.Tech / MS Admissions',
+                label: 'M.Tech / MS',
                 desc: 'Score-based matching against CCMT, COAP and direct IIT admission cutoffs across CS, EC, ME, CE and 6 more papers.',
                 tags: ['IITs', 'NITs', 'IIITs', 'GFTIs', 'COAP', 'CCMT'],
                 href: '/predict?exam=GATE',
+                cta: 'GATE Predictor →',
               },
               {
-                exam: 'JEE', emoji: '📐',
-                label: 'B.Tech Admissions',
-                desc: 'Rank-based matching against JoSAA and CSAB cutoffs — with home-state quota, gender pool and reserved category rules applied.',
-                tags: ['IITs', 'NITs', 'IIITs', 'GFTIs', 'JoSAA', 'CSAB'],
-                href: '/predict?exam=JEE',
+                exam: 'JoSAA', emoji: '📐',
+                label: 'JEE Main · JoSAA',
+                desc: 'Main counselling rounds for NITs, IIITs & GFTIs. Uses your category rank (+ CRL for open seats) with home-state quota applied.',
+                tags: ['NITs', 'IIITs', 'GFTIs', 'JoSAA'],
+                href: '/predict?exam=JEE_MAIN&counselling=JOSAA',
+                cta: 'JoSAA Predictor →',
+              },
+              {
+                exam: 'CSAB', emoji: '🔄',
+                label: 'JEE Main · CSAB',
+                desc: 'Special rounds to fill vacant NIT/IIIT/GFTI seats after JoSAA. Uses your CRL (All India Rank) for all seats — open & reserved.',
+                tags: ['NITs', 'IIITs', 'GFTIs', 'CSAB'],
+                href: '/predict?exam=JEE_MAIN&counselling=CSAB',
+                cta: 'CSAB Predictor →',
               },
             ].map(c => (
               <Link key={c.exam} href={c.href} style={{ textDecoration: 'none' }}>
-                <div className="glass glass-hover" style={{ padding: '2.2rem', borderRadius: 'var(--r-lg)', cursor: 'pointer', height: '100%' }}>
+                <div className="glass glass-hover" style={{ padding: '2rem', borderRadius: 'var(--r-lg)', cursor: 'pointer', height: '100%' }}>
                   <div style={{ fontSize: '2rem', marginBottom: '0.9rem' }}>{c.emoji}</div>
                   <div style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.09em', color: 'var(--accent)', marginBottom: '0.4rem', fontFamily: 'Satoshi,Inter,sans-serif' }}>{c.exam}</div>
-                  <h3 style={{ fontSize: '1.35rem', marginBottom: '0.75rem' }}>{c.label}</h3>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.65, marginBottom: '1.4rem' }}>{c.desc}</p>
-                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  <h3 style={{ fontSize: '1.2rem', marginBottom: '0.7rem' }}>{c.label}</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.87rem', lineHeight: 1.65, marginBottom: '1.2rem' }}>{c.desc}</p>
+                  <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
                     {c.tags.map(t => <span key={t} className="tag">{t}</span>)}
                   </div>
-                  <div className="btn btn-primary btn-sm" style={{ marginTop: '1.6rem', width: '100%', textAlign: 'center', display: 'block', borderRadius: 10 }}>
-                    Predict {c.exam} Colleges →
+                  <div className="btn btn-primary btn-sm" style={{ marginTop: '1.4rem', width: '100%', textAlign: 'center', display: 'block', borderRadius: 10 }}>
+                    {c.cta}
                   </div>
                 </div>
               </Link>
@@ -250,7 +260,8 @@ export default async function Home() {
             <div style={{ fontSize: '0.82rem', lineHeight: 2, color: '#a8a5a0' }}>
               <div style={{ color: '#f5f3ef', fontWeight: 700, marginBottom: '0.2rem', fontFamily: 'Satoshi,Inter,sans-serif' }}>Links</div>
               <div><Link href="/predict?exam=GATE" style={{ color: '#a8a5a0' }}>GATE Predictor</Link></div>
-              <div><Link href="/predict?exam=JEE" style={{ color: '#a8a5a0' }}>JEE Predictor</Link></div>
+              <div><Link href="/predict?exam=JEE_MAIN&counselling=JOSAA" style={{ color: '#a8a5a0' }}>JoSAA Predictor</Link></div>
+              <div><Link href="/predict?exam=JEE_MAIN&counselling=CSAB" style={{ color: '#a8a5a0' }}>CSAB Predictor</Link></div>
               <div><Link href="/admin" style={{ color: '#a8a5a0' }}>Admin</Link></div>
             </div>
           </div>

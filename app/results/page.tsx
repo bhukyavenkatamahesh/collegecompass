@@ -48,12 +48,14 @@ function ResultsContent() {
   const gender    = p.get('gender')    || 'Male'
   const homeState = p.get('homeState') || p.get('state') || ''
   const crl       = p.get('crl')       || ''
+  const counselling = p.get('counselling') || ''
   const accessToken = p.get('accessToken') || ''
   const paid      = Boolean(accessToken)
 
   const isGate   = exam === 'GATE'
-  const examLabel= exam==='GATE'?'GATE':exam==='JEE_ADVANCED'?'JEE Advanced':'JEE Main'
-  const rankLabel= isGate?'Score':exam==='JEE_ADVANCED'?'JEE Adv Rank':'JEE Main Rank'
+  const isCsab   = counselling === 'CSAB'
+  const examLabel= exam==='GATE'?'GATE':exam==='JEE_ADVANCED'?'JEE Advanced':isCsab?'JEE Main (CSAB)':'JEE Main (JoSAA)'
+  const rankLabel= isGate?'Score':exam==='JEE_ADVANCED'?'JEE Adv Rank':isCsab?'CRL':'Category Rank'
   const displayVal = isGate ? score : rank
   const displayBranch = BRANCH_MAP[branch] || branch
 
@@ -67,7 +69,12 @@ function ResultsContent() {
     if (!paid) return
     const body: PredictRequest = { examType:exam, category, branch, gender }
     if (isGate) body.score = parseInt(score)
-    else { body.rank = parseInt(rank); if (crl) body.crlRank = parseInt(crl); body.homeState = homeState }
+    else {
+      body.rank = parseInt(rank)
+      if (crl) body.crlRank = parseInt(crl)
+      body.homeState = homeState
+      if (counselling) (body as Record<string, unknown>).counselling = counselling
+    }
     body.accessToken = accessToken
     fetch('/api/predict', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) })
       .then(r=>r.json())
