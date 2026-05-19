@@ -68,13 +68,19 @@ function PredictForm() {
   const chanceBg   = (c:string) => c==='High'?'rgba(31,157,107,0.12)':c==='Medium'?'var(--accent-bg)':'rgba(224,72,60,0.12)'
 
   return (
-    <div style={{ minHeight:'100vh', background:'var(--bg)' }}>
+    <div style={{ 
+      minHeight:'100vh', paddingBottom:'4rem',
+      '--bg': '#0a0a09', '--bg-1': '#141413', '--bg-card': '#1a1a18', '--bg-muted': '#141413',
+      '--border': 'rgba(255,255,255,0.08)', '--border-strong': 'rgba(255,255,255,0.15)',
+      '--text': '#f5f3ef', '--text-muted': '#a8a5a0', '--text-faint': '#6b6966',
+      background: 'var(--bg)', color: 'var(--text)'
+    } as React.CSSProperties}>
       {/* Sticky nav */}
-      <div className="nav-wrapper">
+      <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(10,10,9,.85)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <nav className="nav">
-          <Link href="/" className="nav-logo">college<span>compass</span><span style={{color:'var(--accent)'}}>.</span></Link>
-          <div style={{ color:'var(--text-muted)', fontSize:'0.85rem' }}>{isGate ? '🎓 GATE Predictor' : '📐 JEE Predictor'}</div>
-          <div style={{ fontSize:'0.82rem', color:'var(--text-muted)' }}>Powered by official {isGate?'CCMT/COAP':'JoSAA/CSAB'} cutoffs</div>
+          <Link href="/" className="nav-logo" style={{ color: '#f5f3ef' }}>college<span>compass</span><span style={{color:'var(--accent)'}}>.</span></Link>
+          <div style={{ color:'#a8a5a0', fontSize:'0.85rem' }}>{isGate ? '🎓 GATE Predictor' : '📐 JEE Predictor'}</div>
+          <div style={{ fontSize:'0.82rem', color:'#a8a5a0' }}>Powered by official {isGate?'CCMT/COAP':'JoSAA/CSAB'} cutoffs</div>
         </nav>
       </div>
 
@@ -132,7 +138,7 @@ function PredictForm() {
                       <button key={e.v} onClick={()=>u('exam',e.v)} style={{ padding:'0.6rem 0.4rem', borderRadius:9, cursor:'pointer', fontFamily:'Satoshi,Inter,sans-serif', fontWeight:700, fontSize:'0.82rem', border:'1.5px solid', transition:'all .18s',
                         background:form.exam===e.v?'var(--text)':'var(--bg-1)',
                         borderColor:form.exam===e.v?'var(--text)':'var(--border-strong)',
-                        color:form.exam===e.v?'#fff':'var(--text-muted)' }}>
+                        color:form.exam===e.v?'var(--bg)':'var(--text-muted)' }}>
                         {e.l}
                       </button>
                     ))}
@@ -182,7 +188,7 @@ function PredictForm() {
                           <button key={g} onClick={()=>u('gender',g)} style={{ padding:'0.65rem', borderRadius:9, cursor:'pointer', fontFamily:'Satoshi,Inter,sans-serif', fontWeight:600, fontSize:'0.88rem', border:'1.5px solid', transition:'all .18s',
                             background:form.gender===g?'var(--text)':'var(--bg-1)',
                             borderColor:form.gender===g?'var(--text)':'var(--border-strong)',
-                            color:form.gender===g?'#fff':'var(--text-muted)' }}>
+                            color:form.gender===g?'var(--bg)':'var(--text-muted)' }}>
                             {g==='Female'?'♀ Female':'♂ Male'}
                           </button>
                         ))}
