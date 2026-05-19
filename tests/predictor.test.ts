@@ -381,7 +381,18 @@ describe('CATEGORY_RANK_MULTIPLIERS', () => {
   })
 
   it('has entries for all 10 categories', () => {
-    for (const c of ['GEN', 'EWS', 'OBC', 'SC', 'ST', 'GEN-PwD', 'EWS-PwD', 'OBC-PwD', 'SC-PwD', 'ST-PwD']) {
+    for (const c of [
+      'GEN',
+      'EWS',
+      'OBC',
+      'SC',
+      'ST',
+      'GEN-PwD',
+      'EWS-PwD',
+      'OBC-PwD',
+      'SC-PwD',
+      'ST-PwD',
+    ]) {
       expect(CATEGORY_RANK_MULTIPLIERS[c]).toBeDefined()
     }
   })

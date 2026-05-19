@@ -25,16 +25,21 @@ function parseCsv(text) {
 // Minimal RFC4180-ish splitter (handles quoted fields with commas).
 function splitCsvLine(line) {
   const out = []
-  let cur = '', q = false
+  let cur = '',
+    q = false
   for (let i = 0; i < line.length; i++) {
     const c = line[i]
     if (q) {
-      if (c === '"' && line[i + 1] === '"') { cur += '"'; i++ }
-      else if (c === '"') q = false
+      if (c === '"' && line[i + 1] === '"') {
+        cur += '"'
+        i++
+      } else if (c === '"') q = false
       else cur += c
     } else if (c === '"') q = true
-    else if (c === ',') { out.push(cur); cur = '' }
-    else cur += c
+    else if (c === ',') {
+      out.push(cur)
+      cur = ''
+    } else cur += c
   }
   out.push(cur)
   return out
@@ -70,5 +75,8 @@ async function main() {
 }
 
 main()
-  .catch(e => { console.error(e); process.exit(1) })
+  .catch(e => {
+    console.error(e)
+    process.exit(1)
+  })
   .finally(() => prisma.$disconnect())

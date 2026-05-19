@@ -26,7 +26,9 @@ describe('expandProgramName', () => {
   })
 
   it('returns full names as-is', () => {
-    expect(expandProgramName('Computer Science and Engineering')).toBe('Computer Science and Engineering')
+    expect(expandProgramName('Computer Science and Engineering')).toBe(
+      'Computer Science and Engineering'
+    )
     expect(expandProgramName('Artificial Intelligence')).toBe('Artificial Intelligence')
   })
 
@@ -50,15 +52,23 @@ describe('resolveInstituteState', () => {
   })
 
   it('resolves NIT states', () => {
-    expect(resolveInstituteState('National Institute of Technology, Tiruchirappalli')).toBe('Tamil Nadu')
+    expect(resolveInstituteState('National Institute of Technology, Tiruchirappalli')).toBe(
+      'Tamil Nadu'
+    )
     expect(resolveInstituteState('National Institute of Technology, Warangal')).toBe('Telangana')
     expect(resolveInstituteState('National Institute of Technology, Silchar')).toBe('Assam')
   })
 
   it('resolves IIIT states by city name', () => {
-    expect(resolveInstituteState('Indian Institute of Information Technology, Allahabad')).toBe('Uttar Pradesh')
-    expect(resolveInstituteState('Indian Institute of Information Technology, Lucknow')).toBe('Uttar Pradesh')
-    expect(resolveInstituteState('Indian Institute of Information Technology, Pune')).toBe('Maharashtra')
+    expect(resolveInstituteState('Indian Institute of Information Technology, Allahabad')).toBe(
+      'Uttar Pradesh'
+    )
+    expect(resolveInstituteState('Indian Institute of Information Technology, Lucknow')).toBe(
+      'Uttar Pradesh'
+    )
+    expect(resolveInstituteState('Indian Institute of Information Technology, Pune')).toBe(
+      'Maharashtra'
+    )
   })
 
   it('returns empty for unknown institutes', () => {

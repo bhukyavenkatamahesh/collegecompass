@@ -122,7 +122,7 @@ const PROGRAM_CODE_MAP: Record<string, string> = {
  */
 export function expandProgramName(raw: string): string {
   if (!raw) return raw
-  
+
   // Strip common list prefixes like "a) ", "e) ", "iv) " from the raw string
   const cleanedRaw = raw.replace(/^([a-z]|[ivx]+)\)\s+/i, '').trim()
 

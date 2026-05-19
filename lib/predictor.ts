@@ -1,4 +1,14 @@
-export type Category = 'GEN' | 'OBC' | 'SC' | 'ST' | 'EWS' | 'GEN-PwD' | 'OBC-PwD' | 'SC-PwD' | 'ST-PwD' | 'EWS-PwD'
+export type Category =
+  | 'GEN'
+  | 'OBC'
+  | 'SC'
+  | 'ST'
+  | 'EWS'
+  | 'GEN-PwD'
+  | 'OBC-PwD'
+  | 'SC-PwD'
+  | 'ST-PwD'
+  | 'EWS-PwD'
 export type InstituteType = 'IIT' | 'NIT' | 'IIIT' | 'GFTI'
 export type JeeExamType = 'JEE_MAIN' | 'JEE_ADVANCED'
 
@@ -13,14 +23,22 @@ export interface CollegeResult {
   closeScore: number
   chance: 'High' | 'Medium' | 'Low'
   chancePercent: number
-  isInterdisciplinary: boolean   // program outside student's primary branch
+  isInterdisciplinary: boolean // program outside student's primary branch
   round?: number
   year?: number
 }
 
 export const CATEGORIES: Category[] = [
-  'GEN', 'EWS', 'OBC', 'SC', 'ST',
-  'GEN-PwD', 'EWS-PwD', 'OBC-PwD', 'SC-PwD', 'ST-PwD',
+  'GEN',
+  'EWS',
+  'OBC',
+  'SC',
+  'ST',
+  'GEN-PwD',
+  'EWS-PwD',
+  'OBC-PwD',
+  'SC-PwD',
+  'ST-PwD',
 ]
 
 export function normalizeJeeExamType(examType: string): JeeExamType | null {
@@ -30,7 +48,9 @@ export function normalizeJeeExamType(examType: string): JeeExamType | null {
 }
 
 export function shouldFilterByBranch(branch: string | null | undefined): boolean {
-  const value = String(branch ?? '').trim().toUpperCase()
+  const value = String(branch ?? '')
+    .trim()
+    .toUpperCase()
   return value !== '' && value !== 'ALL'
 }
 
@@ -55,12 +75,15 @@ export function usesCrlRank(source: string | null | undefined, category: string)
  * Handles multi-paper strings like "CS/DA/EC" and "ALL".
  */
 export function isGatePaperEligible(studentPaper: string, dbPaper: string | null): boolean {
-  if (!dbPaper) return false  // handled separately by keyword fallback
+  if (!dbPaper) return false // handled separately by keyword fallback
   const p = dbPaper.toUpperCase().trim()
   const sp = studentPaper.toUpperCase().trim()
   if (p === 'ALL' || p === 'GATE') return true
   // Split on / or , or space
-  const parts = p.split(/[/,\s]+/).map(x => x.trim()).filter(Boolean)
+  const parts = p
+    .split(/[/,\s]+/)
+    .map(x => x.trim())
+    .filter(Boolean)
   return parts.some(part => part === sp)
 }
 
@@ -74,59 +97,99 @@ export function isGatePaperEligible(studentPaper: string, dbPaper: string | null
 export const JEE_BRANCH_KEYWORDS: Record<string, { primary: string[]; related: string[] }> = {
   CS: {
     primary: [
-      'computer science', 'cse', 'software engineering', 'information technology',
-      'information security', 'cyber security',
+      'computer science',
+      'cse',
+      'software engineering',
+      'information technology',
+      'information security',
+      'cyber security',
     ],
     related: [
       // AI/ML/Data — explicitly separate tracks but CS-eligible at all IITs/NITs
-      'artificial intelligence', 'machine learning', 'data science',
-      'data analytics', 'data engineering', 'computational',
-      'advanced computing', 'human computer interaction',
+      'artificial intelligence',
+      'machine learning',
+      'data science',
+      'data analytics',
+      'data engineering',
+      'computational',
+      'advanced computing',
+      'human computer interaction',
       // Interdisciplinary CS-eligible programs
-      'mathematics and computing',   // IIT Delhi, IIT Roorkee — CS eligible
+      'mathematics and computing', // IIT Delhi, IIT Roorkee — CS eligible
       'internet of things',
       'blockchain',
       'quantum computing',
       'digital',
-      'robotics',                    // accepted at several IITs for CS background
+      'robotics', // accepted at several IITs for CS background
     ],
   },
   EC: {
     primary: [
-      'electronics', 'communication', 'vlsi', 'signal processing',
-      'embedded', 'wireless', 'rf', 'photonics', 'microelectronics',
+      'electronics',
+      'communication',
+      'vlsi',
+      'signal processing',
+      'embedded',
+      'wireless',
+      'rf',
+      'photonics',
+      'microelectronics',
     ],
     related: [
       'electrical and electronics',
-      'robotics', 'internet of things',
-      'artificial intelligence and data engineering',  // IIT Guwahati EC+AI
+      'robotics',
+      'internet of things',
+      'artificial intelligence and data engineering', // IIT Guwahati EC+AI
       'biomedical engineering',
       'instrumentation',
     ],
   },
   EE: {
     primary: [
-      'electrical', 'power systems', 'power electronics', 'control systems',
-      'smart grid', 'renewable energy', 'electric vehicles',
+      'electrical',
+      'power systems',
+      'power electronics',
+      'control systems',
+      'smart grid',
+      'renewable energy',
+      'electric vehicles',
     ],
-    related: [
-      'electronics and electrical', 'instrumentation',
-      'robotics', 'mechatronics',
-    ],
+    related: ['electronics and electrical', 'instrumentation', 'robotics', 'mechatronics'],
   },
   ME: {
     primary: [
-      'mechanical', 'thermal', 'manufacturing', 'production', 'design',
-      'automobile', 'automotive', 'aerospace', 'cad', 'cam',
+      'mechanical',
+      'thermal',
+      'manufacturing',
+      'production',
+      'design',
+      'automobile',
+      'automotive',
+      'aerospace',
+      'cad',
+      'cam',
     ],
     related: [
-      'mechatronics', 'industrial', 'additive manufacturing',
-      'energy', 'robotics', 'naval architecture',
+      'mechatronics',
+      'industrial',
+      'additive manufacturing',
+      'energy',
+      'robotics',
+      'naval architecture',
     ],
   },
   CE: {
-    primary: ['civil', 'structural', 'geotechnical', 'transportation',
-              'environmental', 'water', 'construction', 'urban', 'infrastructure'],
+    primary: [
+      'civil',
+      'structural',
+      'geotechnical',
+      'transportation',
+      'environmental',
+      'water',
+      'construction',
+      'urban',
+      'infrastructure',
+    ],
     related: ['architecture', 'planning'],
   },
   CH: {
@@ -142,7 +205,10 @@ export const JEE_BRANCH_KEYWORDS: Record<string, { primary: string[]; related: s
   AEROSPACE: { primary: ['aerospace', 'aeronautical', 'flight'], related: [] },
   ARCH: { primary: ['architecture', 'planning', 'urban design'], related: [] },
   PHYSICS: { primary: ['engineering physics', 'applied physics', 'photonics'], related: [] },
-  MATH: { primary: ['mathematics and computing', 'statistics', 'operations research'], related: [] },
+  MATH: {
+    primary: ['mathematics and computing', 'statistics', 'operations research'],
+    related: [],
+  },
 }
 
 /** Check if a JEE program name matches a branch's keywords */
@@ -171,57 +237,115 @@ export function matchJeeBranch(
 // ─────────────────────────────────────────────────────────────────────────────
 export const GATE_FALLBACK_KEYWORDS: Record<string, string[]> = {
   CS: [
-    'computer science', 'cse', 'software', 'information technology',
-    'information security', 'cyber security',
-    'artificial intelligence', 'machine learning', 'data science',
-    'data analytics', 'data engineering', 'computational',
-    'advanced computing', 'quantum computing',
-    'robotics and autonomous',   // IIT Bombay CSE eligible
+    'computer science',
+    'cse',
+    'software',
+    'information technology',
+    'information security',
+    'cyber security',
+    'artificial intelligence',
+    'machine learning',
+    'data science',
+    'data analytics',
+    'data engineering',
+    'computational',
+    'advanced computing',
+    'quantum computing',
+    'robotics and autonomous', // IIT Bombay CSE eligible
     'cognitive systems',
-    'management sciences',       // IIT Delhi JTM — CS/EC eligible
+    'management sciences', // IIT Delhi JTM — CS/EC eligible
     'mobility engineering',
     'smart mobility',
-    'geoinformatics',            // IIT Bombay CS eligible
+    'geoinformatics', // IIT Bombay CS eligible
   ],
   EC: [
-    'electronics', 'communication', 'vlsi', 'signal processing',
-    'embedded', 'wireless', 'photonics', 'microelectronics',
-    'advanced communication', 'rf', 'instrumentation',
+    'electronics',
+    'communication',
+    'vlsi',
+    'signal processing',
+    'embedded',
+    'wireless',
+    'photonics',
+    'microelectronics',
+    'advanced communication',
+    'rf',
+    'instrumentation',
     'robotics and autonomous',
-    'management sciences',       // IIT Delhi JTM — CS/EC eligible
+    'management sciences', // IIT Delhi JTM — CS/EC eligible
     'biomedical engineering',
     'autonomous systems',
-    'smart manufacturing',       // EC paper at some IITs
+    'smart manufacturing', // EC paper at some IITs
   ],
   EE: [
-    'electrical', 'power systems', 'power electronics', 'control',
-    'smart grid', 'renewable energy', 'drives', 'machines',
-    'instrumentation', 'embedded systems',
+    'electrical',
+    'power systems',
+    'power electronics',
+    'control',
+    'smart grid',
+    'renewable energy',
+    'drives',
+    'machines',
+    'instrumentation',
+    'embedded systems',
     'robotics',
   ],
   ME: [
-    'mechanical', 'thermal', 'manufacturing', 'production', 'design',
-    'automobile', 'automotive', 'aerospace', 'cad', 'cam',
-    'robotics', 'mechatronics', 'additive', 'industrial engineering',
-    'mobility engineering', 'smart manufacturing',
+    'mechanical',
+    'thermal',
+    'manufacturing',
+    'production',
+    'design',
+    'automobile',
+    'automotive',
+    'aerospace',
+    'cad',
+    'cam',
+    'robotics',
+    'mechatronics',
+    'additive',
+    'industrial engineering',
+    'mobility engineering',
+    'smart manufacturing',
     'unmanned aerial',
   ],
   CE: [
-    'civil', 'structural', 'geotechnical', 'transportation',
-    'environmental', 'water resources', 'construction management',
-    'urban', 'geoinformatics',
+    'civil',
+    'structural',
+    'geotechnical',
+    'transportation',
+    'environmental',
+    'water resources',
+    'construction management',
+    'urban',
+    'geoinformatics',
   ],
   CH: [
-    'chemical', 'process', 'biochemical', 'petroleum', 'polymer',
-    'pharmaceutical', 'bioprocess',
+    'chemical',
+    'process',
+    'biochemical',
+    'petroleum',
+    'polymer',
+    'pharmaceutical',
+    'bioprocess',
   ],
   IN: [
-    'instrumentation', 'control', 'embedded', 'process control',
-    'biomedical', 'signal processing', 'automation',
+    'instrumentation',
+    'control',
+    'embedded',
+    'process control',
+    'biomedical',
+    'signal processing',
+    'automation',
   ],
   BT: ['biotechnology', 'bioinformatics', 'biochemical', 'biomedical', 'bioprocess'],
-  AE: ['aerospace', 'aeronautical', 'flight mechanics', 'propulsion', 'aerodynamics',
-       'unmanned aerial'],
+  AE: [
+    'aerospace',
+    'aeronautical',
+    'flight mechanics',
+    'propulsion',
+    'aerodynamics',
+    'unmanned aerial',
+  ],
   DA: ['data science', 'artificial intelligence', 'statistics', 'analytics', 'machine learning'],
   MA: ['mathematics', 'statistics', 'operations research', 'financial mathematics'],
   PH: ['physics', 'applied physics', 'photonics', 'nanotechnology', 'quantum'],
@@ -309,6 +433,14 @@ export function calculateChanceByScore(
 export const calculateChance = calculateChanceByRank
 
 export const CATEGORY_RANK_MULTIPLIERS: Record<string, number> = {
-  GEN: 1, EWS: 1.1, OBC: 1.3, SC: 2.0, ST: 2.5,
-  'GEN-PwD': 1.5, 'EWS-PwD': 1.6, 'OBC-PwD': 1.8, 'SC-PwD': 2.5, 'ST-PwD': 3.0,
+  GEN: 1,
+  EWS: 1.1,
+  OBC: 1.3,
+  SC: 2.0,
+  ST: 2.5,
+  'GEN-PwD': 1.5,
+  'EWS-PwD': 1.6,
+  'OBC-PwD': 1.8,
+  'SC-PwD': 2.5,
+  'ST-PwD': 3.0,
 }

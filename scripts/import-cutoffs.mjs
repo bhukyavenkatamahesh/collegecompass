@@ -128,10 +128,14 @@ function parseCsv(text) {
   row.push(field)
   if (row.some(value => value !== '')) rows.push(row)
   const [headers, ...data] = rows
-  return data.map(values => Object.fromEntries(headers.map((header, index) => [
-    header.replace(/^\uFEFF/, '').trim(),
-    (values[index] ?? '').trim(),
-  ])))
+  return data.map(values =>
+    Object.fromEntries(
+      headers.map((header, index) => [
+        header.replace(/^\uFEFF/, '').trim(),
+        (values[index] ?? '').trim(),
+      ])
+    )
+  )
 }
 
 function readCsv(file) {
@@ -150,7 +154,9 @@ function normalizeCategory(value) {
 }
 
 function norm(value) {
-  return String(value).toLowerCase().replace(/[^a-z0-9 ]/g, '')
+  return String(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, '')
 }
 
 function guessState(institute, given) {
@@ -172,24 +178,26 @@ function jeeRows(file, source) {
       skipped += 1
       return []
     }
-    return [{
-      examType: 'JEE',
-      year: intValue(row.year, YEAR),
-      institute,
-      program: row.program?.trim() || '',
-      category: normalizeCategory(row.category),
-      round: intValue(row.round, 1),
-      openRank,
-      closeRank,
-      openScore: 0,
-      closeScore: 0,
-      paper: null,
-      gender: row.gender?.trim() || null,
-      quota: row.quota?.trim() || null,
-      source,
-      state: guessState(institute, row.state?.trim()),
-      instituteType: row.instituteType?.trim() || 'GFTI',
-    }]
+    return [
+      {
+        examType: 'JEE',
+        year: intValue(row.year, YEAR),
+        institute,
+        program: row.program?.trim() || '',
+        category: normalizeCategory(row.category),
+        round: intValue(row.round, 1),
+        openRank,
+        closeRank,
+        openScore: 0,
+        closeScore: 0,
+        paper: null,
+        gender: row.gender?.trim() || null,
+        quota: row.quota?.trim() || null,
+        source,
+        state: guessState(institute, row.state?.trim()),
+        instituteType: row.instituteType?.trim() || 'GFTI',
+      },
+    ]
   })
   return { rows, skipped }
 }
@@ -204,24 +212,26 @@ function ccmtRows(file) {
       skipped += 1
       return []
     }
-    return [{
-      examType: 'GATE',
-      year: intValue(row.year, YEAR),
-      institute,
-      program: row.program?.trim() || '',
-      category: normalizeCategory(row.category),
-      round: intValue(row.round, 0),
-      openRank: 0,
-      closeRank: 0,
-      openScore,
-      closeScore,
-      paper: row.paper?.trim() || null,
-      gender: null,
-      quota: null,
-      source: file.startsWith('gate_') ? 'COAP' : 'CCMT',
-      state: row.state?.trim() || null,
-      instituteType: row.instituteType?.trim() || (institute.startsWith('IIT') ? 'IIT' : null),
-    }]
+    return [
+      {
+        examType: 'GATE',
+        year: intValue(row.year, YEAR),
+        institute,
+        program: row.program?.trim() || '',
+        category: normalizeCategory(row.category),
+        round: intValue(row.round, 0),
+        openRank: 0,
+        closeRank: 0,
+        openScore,
+        closeScore,
+        paper: row.paper?.trim() || null,
+        gender: null,
+        quota: null,
+        source: file.startsWith('gate_') ? 'COAP' : 'CCMT',
+        state: row.state?.trim() || null,
+        instituteType: row.instituteType?.trim() || (institute.startsWith('IIT') ? 'IIT' : null),
+      },
+    ]
   })
   return { rows, skipped }
 }
@@ -232,7 +242,9 @@ async function createMany(prisma, rows) {
     const batch = rows.slice(i, i + BATCH_SIZE)
     const result = await prisma.cutoff.createMany({ data: batch })
     inserted += result.count
-    process.stdout.write(`\rInserted ${inserted.toLocaleString()} / ${rows.length.toLocaleString()}`)
+    process.stdout.write(
+      `\rInserted ${inserted.toLocaleString()} / ${rows.length.toLocaleString()}`
+    )
   }
   process.stdout.write('\n')
   return inserted
@@ -257,7 +269,9 @@ async function main() {
     const rows = inputs.flatMap(input => input.rows)
     const skipped = inputs.reduce((sum, input) => sum + input.skipped, 0)
 
-    console.log(`Prepared ${rows.length.toLocaleString()} rows. Skipped ${skipped.toLocaleString()} invalid rows.`)
+    console.log(
+      `Prepared ${rows.length.toLocaleString()} rows. Skipped ${skipped.toLocaleString()} invalid rows.`
+    )
     console.log(`Deleting existing ${YEAR} JEE/GATE rows...`)
     const deleted = await prisma.cutoff.deleteMany({
       where: { year: YEAR, examType: { in: ['JEE', 'GATE'] } },
@@ -272,7 +286,9 @@ async function main() {
     ])
 
     console.log(`Done. Inserted ${inserted.toLocaleString()} rows.`)
-    console.log(`Counts: JEE=${jee.toLocaleString()} GATE=${gate.toLocaleString()} Total=${total.toLocaleString()}`)
+    console.log(
+      `Counts: JEE=${jee.toLocaleString()} GATE=${gate.toLocaleString()} Total=${total.toLocaleString()}`
+    )
   } finally {
     await prisma.$disconnect()
     await pool.end()

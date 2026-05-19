@@ -19,11 +19,19 @@ function optionalNumber(value: unknown) {
 
 export function normalizeReportPayload(payload: ReportPayload) {
   return {
-    examType: String(payload.examType ?? '').trim().toUpperCase(),
+    examType: String(payload.examType ?? '')
+      .trim()
+      .toUpperCase(),
     category: String(payload.category ?? '').trim(),
-    branch: String(payload.branch || 'ALL').trim().toUpperCase(),
-    gender: String(payload.gender || '').trim().toLowerCase(),
-    homeState: String(payload.homeState || '').trim().toLowerCase(),
+    branch: String(payload.branch || 'ALL')
+      .trim()
+      .toUpperCase(),
+    gender: String(payload.gender || '')
+      .trim()
+      .toLowerCase(),
+    homeState: String(payload.homeState || '')
+      .trim()
+      .toLowerCase(),
     rank: optionalNumber(payload.rank),
     score: optionalNumber(payload.score),
     crlRank: optionalNumber(payload.crlRank),
@@ -32,10 +40,7 @@ export function normalizeReportPayload(payload: ReportPayload) {
 
 export function reportFingerprint(payload: ReportPayload) {
   const normalized = normalizeReportPayload(payload)
-  return crypto
-    .createHash('sha256')
-    .update(JSON.stringify(normalized))
-    .digest('hex')
+  return crypto.createHash('sha256').update(JSON.stringify(normalized)).digest('hex')
 }
 
 export function signReportAccess(payload: ReportPayload) {
@@ -56,5 +61,11 @@ export function verifyReportAccess(token: unknown, payload: ReportPayload) {
 export function hasPlaceholderRazorpayKeys() {
   const keyId = process.env.RAZORPAY_KEY_ID || ''
   const secret = process.env.RAZORPAY_KEY_SECRET || ''
-  return !keyId || !secret || keyId.includes('YOUR_') || secret.includes('YOUR_') || secret.includes('XXXX')
+  return (
+    !keyId ||
+    !secret ||
+    keyId.includes('YOUR_') ||
+    secret.includes('YOUR_') ||
+    secret.includes('XXXX')
+  )
 }
