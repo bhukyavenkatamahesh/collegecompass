@@ -13,6 +13,7 @@ dist/
 .vscode/
 .idea/
 *.swp
+*.swo
 *~
 
 # macOS

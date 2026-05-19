@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { signToken, verifyToken, hashPassword, verifyPassword } from '@/lib/auth'
 
+const mutableEnv = process.env as Record<string, string | undefined>
+
 // ─────────────────────────────────────────────────────────────────────────────
 // JWT sign / verify
 // ─────────────────────────────────────────────────────────────────────────────
@@ -43,6 +45,22 @@ describe('signToken / verifyToken', () => {
     const decoded = verifyToken(token) as { iat: number; exp: number }
     const diff = decoded.exp - decoded.iat
     expect(diff).toBe(7 * 24 * 60 * 60) // 7 days in seconds
+  })
+
+  it('does not sign production tokens without NEXTAUTH_SECRET', () => {
+    const originalNodeEnv = process.env.NODE_ENV
+    const originalSecret = process.env.NEXTAUTH_SECRET
+    try {
+      mutableEnv.NODE_ENV = 'production'
+      delete process.env.NEXTAUTH_SECRET
+
+      expect(() => signToken({ role: 'test' })).toThrow('NEXTAUTH_SECRET is required')
+    } finally {
+      if (originalNodeEnv === undefined) delete mutableEnv.NODE_ENV
+      else mutableEnv.NODE_ENV = originalNodeEnv
+      if (originalSecret === undefined) delete process.env.NEXTAUTH_SECRET
+      else process.env.NEXTAUTH_SECRET = originalSecret
+    }
   })
 })
 
