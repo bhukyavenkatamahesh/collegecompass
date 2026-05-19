@@ -1,14 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { ReportPayload, verifyReportAccess } from '@/lib/report-access'
+import { expandProgramName } from '@/lib/program-names'
+import { resolveInstituteState } from '@/lib/institute-state'
 import {
+  CATEGORIES,
   calculateChanceByRank,
   calculateChanceByScore,
   isGatePaperEligible,
   gateKeywordFallback,
   isGatePrimaryProgram,
   matchJeeBranch,
+  normalizeJeeExamType,
+  shouldFilterByBranch,
+  usesCrlRank,
   CollegeResult,
 } from '@/lib/predictor'
+
+function positiveNumber(value: unknown): number | null {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null
+}
+
+function positiveInteger(value: unknown): number | null {
+  const parsed = Number(value)
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,16 +42,25 @@ export async function POST(req: NextRequest) {
       gender = 'Male',   // JEE only: 'Male' | 'Female'
       homeState = '',    // JEE only: candidate's home state (for NIT/GFTI HS quota)
       crlRank,           // JEE only: All-India CRL (needed for OPEN seats & CSAB)
+      crl,               // backwards-compatible alias used by older clients
+      accessToken,
     } = body
 
     if (!examType || !category) {
       return NextResponse.json({ error: 'Missing required fields: examType, category' }, { status: 400 })
     }
+    if (!CATEGORIES.includes(category)) {
+      return NextResponse.json({ error: `Unsupported category: ${category}` }, { status: 400 })
+    }
 
     // ── GATE prediction ──────────────────────────────────────────────────────
     if (examType === 'GATE') {
-      if (!score && !rank) {
-        return NextResponse.json({ error: 'Provide score or rank for GATE' }, { status: 400 })
+      const gateScore = positiveNumber(score)
+      if (!gateScore) {
+        return NextResponse.json({ error: 'Provide a valid GATE score' }, { status: 400 })
+      }
+      if (gateScore > 1000) {
+        return NextResponse.json({ error: 'GATE score must be out of 1000' }, { status: 400 })
       }
       if (!branch) {
         return NextResponse.json({ error: 'Provide branch (GATE paper code) e.g. CS, EC, ME' }, { status: 400 })
@@ -82,18 +108,18 @@ export async function POST(req: NextRequest) {
       const deduplicated = Array.from(bestMap.values())
 
       // Score-based chance calculation
-      const gateScore = Number(score) || 0
       const results: CollegeResult[] = deduplicated
         .map(c => {
           const openScore = c.openScore ?? 0
           const closeScore = c.closeScore ?? 0
           const { chance, percent } = calculateChanceByScore(gateScore, openScore, closeScore)
-          const isPrimary = isGatePrimaryProgram(c.program, paper)
+          const expandedProgram = expandProgramName(c.program)
+          const isPrimary = isGatePrimaryProgram(expandedProgram, paper) || isGatePrimaryProgram(c.program, paper)
           return {
             institute: c.institute,
-            program: c.program,
+            program: expandedProgram,
             instituteType: (c.instituteType ?? 'GFTI') as CollegeResult['instituteType'],
-            state: c.state ?? '',
+            state: c.state || resolveInstituteState(c.institute),
             openRank: c.openRank,
             closeRank: c.closeRank,
             openScore,
@@ -112,25 +138,39 @@ export async function POST(req: NextRequest) {
           return b.closeScore - a.closeScore
         })
 
+      const reportPayload: ReportPayload = {
+        examType: 'GATE',
+        score: gateScore,
+        category,
+        branch: paper,
+      }
+      const hasFullAccess = verifyReportAccess(accessToken, reportPayload)
+
       return NextResponse.json({
-        results,
+        results: hasFullAccess ? results : results.slice(0, 3),
         examType,
         paper,
         score: gateScore,
         category,
         totalEligiblePrograms: eligible.length,
         totalResults: results.length,
+        locked: !hasFullAccess,
       })
     }
 
     // ── JEE prediction (Advanced → IITs, Main → NIT/IIIT/GFTI) ───────────────
     // JoSAA admits IITs on the JEE *Advanced* rank and NITs/IIITs/GFTIs on the
     // JEE *Main* rank — two different rank scales, so they must NOT be mixed.
-    const isJeeAdv = examType === 'JEE_ADV'
-    const isJeeMain = examType === 'JEE_MAIN' || examType === 'JEE'
-    if (isJeeAdv || isJeeMain) {
-      if (!rank) {
-        return NextResponse.json({ error: 'Provide rank for JEE' }, { status: 400 })
+    const jeeExam = normalizeJeeExamType(examType)
+    if (jeeExam) {
+      const isJeeAdv = jeeExam === 'JEE_ADVANCED'
+      const isJeeMain = jeeExam === 'JEE_MAIN'
+      const catRank = positiveInteger(rank)
+      if (!catRank) {
+        return NextResponse.json({ error: `Provide a valid ${isJeeAdv ? 'JEE Advanced' : 'JEE Main'} rank` }, { status: 400 })
+      }
+      if (isJeeMain && !String(homeState).trim()) {
+        return NextResponse.json({ error: 'Home state is required for JEE Main predictions' }, { status: 400 })
       }
 
       // Rank basis differs by source/seat:
@@ -138,13 +178,18 @@ export async function POST(req: NextRequest) {
       //  • JoSAA OPEN cutoffs               → CRL
       //  • CSAB (all seats)                 → CRL
       // A reserved candidate also competes for OPEN seats using their CRL.
-      const catRank = Number(rank)                                  // category rank (=CRL for GEN)
-      const crl = Number(crlRank) || (category === 'GEN' ? catRank : 0)
+      const crlValue = crlRank ?? crl
+      const parsedCrl = crlValue ? positiveInteger(crlValue) : null
+      if (crlValue && !parsedCrl) {
+        return NextResponse.json({ error: 'Provide a valid CRL rank' }, { status: 400 })
+      }
+      const crlForUser = parsedCrl ?? (category === 'GEN' ? catRank : 0)
       // If a reserved user gives no CRL, CRL-basis rows can't be judged
       // fairly — push them to "Low" rather than falsely "High".
-      const crlForCmp = crl > 0 ? crl : Number.MAX_SAFE_INTEGER
+      const crlForCmp = crlForUser > 0 ? crlForUser : Number.MAX_SAFE_INTEGER
       const isFemale = String(gender).toLowerCase().startsWith('f')
       const home = String(homeState).trim().toLowerCase()
+      const branchFilter = shouldFilterByBranch(branch) ? String(branch).trim() : ''
       // Exam scopes institute types: Advanced = IIT only; Main = the rest.
       const scope = isJeeAdv ? ['IIT'] : ['NIT', 'IIIT', 'GFTI']
 
@@ -175,7 +220,7 @@ export async function POST(req: NextRequest) {
 
       const filtered = allCutoffs.filter(c => {
         // 1. Branch eligibility
-        if (branch && !matchJeeBranch(c.program, branch).matches) return false
+        if (branchFilter && !matchJeeBranch(c.program, branchFilter).matches) return false
         // 2. Seat pool (gender). Males: Gender-Neutral only.
         //    Females: Gender-Neutral + Female-only seats.
         const gn = c.gender === 'Gender-Neutral'
@@ -203,25 +248,25 @@ export async function POST(req: NextRequest) {
       }
 
       // Pick the correct rank to compare for each row.
-      const haveCrl = crl > 0
-      const usesCrl = (c: { source: string | null; category: string }) =>
-        !((c.source ?? 'JOSAA') === 'JOSAA' && c.category !== 'GEN')
+      const haveCrl = crlForUser > 0
       const rankForRow = (c: { source: string | null; category: string }) =>
-        usesCrl(c) ? crlForCmp : catRank
+        usesCrlRank(c.source, c.category) ? crlForCmp : catRank
 
       const results = Array.from(bestMap.values())
         .map(c => {
           const cmpRank = rankForRow(c)
           const { chance, percent } = calculateChanceByRank(cmpRank, c.openRank, c.closeRank)
-          const { isPrimary } = branch ? matchJeeBranch(c.program, branch) : { isPrimary: true }
+          const expandedProgram = expandProgramName(c.program)
+          const jeeMatch = branchFilter ? matchJeeBranch(expandedProgram, branchFilter) : { isPrimary: true, matches: true }
+          const isPrimary = jeeMatch.isPrimary || (branchFilter ? matchJeeBranch(c.program, branchFilter).isPrimary : true)
           const seatType = (category !== 'GEN' && c.category === 'GEN')
             ? 'Open (via CRL)'
             : c.category === 'GEN' ? 'Open' : `${c.category} reserved`
           return {
             institute: c.institute,
-            program: c.program,
+            program: expandedProgram,
             instituteType: (c.instituteType ?? 'GFTI') as CollegeResult['instituteType'],
-            state: c.state ?? '',
+            state: c.state || resolveInstituteState(c.institute),
             openRank: c.openRank,
             closeRank: c.closeRank,
             openScore: 0,
@@ -233,7 +278,7 @@ export async function POST(req: NextRequest) {
             quota: quotaClass(c.quota),
             seatType,
             source: c.source ?? 'JOSAA',
-            rankBasis: ((c.source ?? 'JOSAA') === 'JOSAA' && c.category !== 'GEN') ? 'Category rank' : 'CRL',
+            rankBasis: usesCrlRank(c.source, c.category) ? 'CRL' : 'Category rank',
             round: c.round,
             year: c.year,
           }
@@ -246,20 +291,32 @@ export async function POST(req: NextRequest) {
           return a.closeRank - b.closeRank
         })
 
+      const reportPayload: ReportPayload = {
+        examType: jeeExam,
+        rank: catRank,
+        crlRank: parsedCrl ?? undefined,
+        category,
+        gender: isFemale ? 'Female' : 'Male',
+        homeState: isJeeAdv ? '' : homeState,
+        branch: branchFilter || 'ALL',
+      }
+      const hasFullAccess = verifyReportAccess(accessToken, reportPayload)
+
       return NextResponse.json({
-        results,
-        examType,
+        results: hasFullAccess ? results : results.slice(0, 3),
+        examType: jeeExam,
         exam: isJeeAdv ? 'JEE Advanced' : 'JEE Main',
         rankType: isJeeAdv ? 'JEE Advanced rank' : 'JEE Main rank',
         scope: allowedTypes,
         rank: catRank,
-        crlRank: crl || null,
+        crlRank: crlForUser || null,
         category,
         gender: isFemale ? 'Female' : 'Male',
         homeState: isJeeAdv ? '' : homeState,
-        branch: branch ?? 'ALL',
+        branch: branchFilter || 'ALL',
         totalEligiblePrograms: filtered.length,
         totalResults: results.length,
+        locked: !hasFullAccess,
       })
     }
 

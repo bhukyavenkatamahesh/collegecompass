@@ -1,5 +1,6 @@
-export type Category = 'GEN' | 'OBC' | 'SC' | 'ST' | 'EWS' | 'GEN-PwD' | 'OBC-PwD' | 'SC-PwD' | 'ST-PwD'
+export type Category = 'GEN' | 'OBC' | 'SC' | 'ST' | 'EWS' | 'GEN-PwD' | 'OBC-PwD' | 'SC-PwD' | 'ST-PwD' | 'EWS-PwD'
 export type InstituteType = 'IIT' | 'NIT' | 'IIIT' | 'GFTI'
+export type JeeExamType = 'JEE_MAIN' | 'JEE_ADVANCED'
 
 export interface CollegeResult {
   institute: string
@@ -15,6 +16,26 @@ export interface CollegeResult {
   isInterdisciplinary: boolean   // program outside student's primary branch
   round?: number
   year?: number
+}
+
+export const CATEGORIES: Category[] = [
+  'GEN', 'EWS', 'OBC', 'SC', 'ST',
+  'GEN-PwD', 'EWS-PwD', 'OBC-PwD', 'SC-PwD', 'ST-PwD',
+]
+
+export function normalizeJeeExamType(examType: string): JeeExamType | null {
+  if (examType === 'JEE_MAIN' || examType === 'JEE') return 'JEE_MAIN'
+  if (examType === 'JEE_ADVANCED' || examType === 'JEE_ADV') return 'JEE_ADVANCED'
+  return null
+}
+
+export function shouldFilterByBranch(branch: string | null | undefined): boolean {
+  const value = String(branch ?? '').trim().toUpperCase()
+  return value !== '' && value !== 'ALL'
+}
+
+export function usesCrlRank(source: string | null | undefined, category: string): boolean {
+  return !((source ?? 'JOSAA') === 'JOSAA' && category !== 'GEN')
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -289,5 +310,5 @@ export const calculateChance = calculateChanceByRank
 
 export const CATEGORY_RANK_MULTIPLIERS: Record<string, number> = {
   GEN: 1, EWS: 1.1, OBC: 1.3, SC: 2.0, ST: 2.5,
-  'GEN-PwD': 1.5, 'OBC-PwD': 1.8, 'SC-PwD': 2.5, 'ST-PwD': 3.0,
+  'GEN-PwD': 1.5, 'EWS-PwD': 1.6, 'OBC-PwD': 1.8, 'SC-PwD': 2.5, 'ST-PwD': 3.0,
 }

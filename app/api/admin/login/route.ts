@@ -1,5 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyPassword, signToken } from '@/lib/auth'
+import { signToken, verifyToken } from '@/lib/auth'
+
+function adminCookieOptions() {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax' as const,
+    maxAge: 60 * 60 * 24 * 7,
+    path: '/',
+  }
+}
+
+export async function GET(req: NextRequest) {
+  const token = req.cookies.get('admin_token')?.value
+  const admin = token ? verifyToken(token) : null
+  return NextResponse.json({ authenticated: Boolean(admin) })
+}
 
 export async function POST(req: NextRequest) {
   const { email, password } = await req.json()
@@ -15,11 +31,15 @@ export async function POST(req: NextRequest) {
   const token = signToken({ email, role: 'admin' })
 
   const res = NextResponse.json({ success: true })
-  res.cookies.set('admin_token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-    path: '/',
+  res.cookies.set('admin_token', token, adminCookieOptions())
+  return res
+}
+
+export async function DELETE() {
+  const res = NextResponse.json({ success: true })
+  res.cookies.set('admin_token', '', {
+    ...adminCookieOptions(),
+    maxAge: 0,
   })
   return res
 }

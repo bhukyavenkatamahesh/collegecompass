@@ -58,7 +58,7 @@ export default async function Home() {
             </div>
 
             {/* Social proof strip */}
-            <div className="fade-up fade-up-5" style={{ marginTop: '4rem', display: 'flex', justifyContent: 'center', gap: '2.5rem', flexWrap: 'wrap' }}>
+            <div className="fade-up fade-up-5 hero-stats">
               {[
                 { n: `${totalCutoffs.toLocaleString()}+`, l: 'Cutoff data points' },
                 { n: `${totalColleges}+`, l: 'Institutes tracked' },
@@ -129,7 +129,7 @@ export default async function Home() {
           </div>
           <div className="grid-3">
             {[
-              { icon: '📋', t: 'Official {year} cutoffs', d: 'Data sourced directly from JoSAA, CSAB, COAP and CCMT portals — not third-party scrapers.'.replace('{year}', year.toString()) },
+              { icon: '📋', t: `Official ${year} cutoffs`, d: 'Data sourced directly from JoSAA, CSAB, COAP and CCMT portals — not third-party scrapers.' },
               { icon: '⚖️', t: 'Counselling-accurate rules', d: 'GATE is score-based; JEE maps ranks to IITs/NITs/IIITs with home-state quota, gender pool and reserved category applied exactly.' },
               { icon: '📊', t: 'Last-round cutoffs', d: "We use each programme's final-round closing cutoff — the most realistic threshold for 'will I actually get a seat'." },
               { icon: '🔒', t: 'Honest predictions', d: 'We never claim a fake accuracy number. Predictions are indicative — actual allotment depends on seat matrix and choice-filling.' },
@@ -188,7 +188,7 @@ export default async function Home() {
               <div style={{ fontFamily: 'Satoshi,Inter,sans-serif', fontWeight: 900, fontSize: '2rem', letterSpacing: '-0.05em', marginBottom: '0.3rem' }}>₹0</div>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginBottom: '1.4rem' }}>No credit card. No signup.</p>
               <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.65rem', marginBottom: '1.8rem' }}>
-                {['Top 3 college matches', 'Real {year} cutoff per college', 'Category & exam aware'.replace('{year}', year.toString())].map(f => (
+                {['Top 3 college matches', `Real ${year} cutoff per college`, 'Category & exam aware'].map(f => (
                   <li key={f} style={{ display: 'flex', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem', alignItems: 'flex-start' }}>
                     <span className="emph" style={{ flexShrink: 0, marginTop: '0.1rem' }}>✓</span>{f}
                   </li>

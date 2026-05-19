@@ -3,7 +3,71 @@ import { useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 
-const CATEGORIES = ['GEN','EWS','OBC','SC','ST','GEN-PwD','OBC-PwD','SC-PwD','ST-PwD']
+type ExamType = 'GATE' | 'JEE_MAIN' | 'JEE_ADVANCED'
+type FormState = {
+  exam: ExamType
+  rank: string
+  crl: string
+  category: string
+  branch: string
+  gender: 'Male' | 'Female'
+  homeState: string
+  name: string
+  email: string
+  phone: string
+}
+type PreviewCollege = {
+  institute: string
+  program: string
+  chance: string
+  chancePercent: number
+}
+type PredictRequest = {
+  examType: ExamType
+  category: string
+  branch?: string
+  gender?: string
+  score?: number
+  rank?: number
+  crlRank?: number
+  homeState?: string
+  accessToken?: string
+}
+type RazorpayResponse = {
+  razorpay_order_id: string
+  razorpay_payment_id: string
+  razorpay_signature: string
+}
+type RazorpayOptions = {
+  key: string
+  amount: number
+  currency: string
+  name: string
+  description: string
+  order_id: string
+  prefill: { name: string; email: string; contact: string }
+  handler: (response: RazorpayResponse) => void
+  modal: { ondismiss: () => void }
+}
+type RazorpayInstance = {
+  open: () => void
+}
+type RazorpayConstructor = new (options: RazorpayOptions) => RazorpayInstance
+type OrderResponse = {
+  orderId?: string
+  amount?: number
+  currency?: string
+  keyId?: string
+  mock?: boolean
+  error?: string
+}
+type VerifyResponse = {
+  success?: boolean
+  accessToken?: string
+  error?: string
+}
+
+const CATEGORIES = ['GEN','EWS','OBC','SC','ST','GEN-PwD','EWS-PwD','OBC-PwD','SC-PwD','ST-PwD']
 const STATES = ['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Delhi','Goa','Gujarat','Haryana','Himachal Pradesh','J&K','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Puducherry','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal']
 const GATE_BRANCHES = [
   { name: 'Computer Science', code: 'CS' },
@@ -16,8 +80,20 @@ const GATE_BRANCHES = [
   { name: 'Mathematics', code: 'MA' },
   { name: 'Data Science & AI', code: 'DA' }
 ]
+const JEE_BRANCHES = [
+  { name: 'All branches', code: 'ALL' },
+  { name: 'Computer Science / IT / AI', code: 'CS' },
+  { name: 'Electronics / Communication', code: 'EC' },
+  { name: 'Electrical', code: 'EE' },
+  { name: 'Mechanical', code: 'ME' },
+  { name: 'Civil', code: 'CE' },
+  { name: 'Chemical', code: 'CH' },
+  { name: 'Biotechnology', code: 'BT' },
+  { name: 'Mathematics / Computing', code: 'MATH' },
+  { name: 'Physics', code: 'PHYSICS' },
+]
 
-declare global { interface Window { Razorpay: any } }
+declare global { interface Window { Razorpay: unknown } }
 
 const L = { color:'var(--text)', fontSize:'0.83rem', fontWeight:600, fontFamily:'Satoshi,Inter,sans-serif', letterSpacing:'-0.01em', marginBottom:'0.4rem', display:'block' } as const
 
@@ -25,77 +101,197 @@ function PredictForm() {
   const sp = useSearchParams()
   const router = useRouter()
   const rawExam = sp.get('exam') || 'GATE'
-  const defaultExam = rawExam === 'JEE' ? 'JEE_MAIN' : rawExam
+  const defaultExam: ExamType = rawExam === 'JEE_ADVANCED'
+    ? 'JEE_ADVANCED'
+    : rawExam === 'JEE' || rawExam === 'JEE_MAIN'
+      ? 'JEE_MAIN'
+      : 'GATE'
 
   const [step, setStep] = useState(1)
-  const [form, setForm] = useState({ exam:defaultExam, rank:'', crl:'', category:'GEN', branch:'CS', gender:'Male', homeState:'', name:'', email:'', phone:'' })
+  const [form, setForm] = useState<FormState>({
+    exam: defaultExam,
+    rank: '',
+    crl: '',
+    category: 'GEN',
+    branch: defaultExam === 'GATE' ? 'CS' : 'ALL',
+    gender: 'Male',
+    homeState: '',
+    name: '',
+    email: '',
+    phone: '',
+  })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [preview, setPreview] = useState<any[]>([])
+  const [preview, setPreview] = useState<PreviewCollege[]>([])
 
-  const u = (k:string, v:string) => { setForm(f=>({...f,[k]:v})); setError('') }
+  const u = <K extends keyof FormState>(k: K, v: FormState[K]) => { setForm(f=>({...f,[k]:v})); setError('') }
+  const setExam = (exam: ExamType) => {
+    setForm(f => ({
+      ...f,
+      exam,
+      branch: exam === 'GATE' ? 'CS' : 'ALL',
+      homeState: exam === 'JEE_ADVANCED' ? '' : f.homeState,
+    }))
+    setError('')
+  }
+  const validPositiveNumber = (value: string) => Number.isFinite(Number(value)) && Number(value) > 0
+  const validPositiveInteger = (value: string) => Number.isInteger(Number(value)) && Number(value) > 0
+  const validEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim())
+  const validPhone = (v: string) => /^[6-9]\d{9}$/.test(v.replace(/\s+/g,''))
+  const validName = (v: string) => v.trim().length >= 2 && /^[a-zA-Z\s.'-]+$/.test(v.trim())
+
+  function buildPredictionBody(): PredictRequest {
+    const body: PredictRequest = { examType: form.exam, category: form.category }
+    if (form.exam === 'GATE') {
+      body.score = Number(form.rank)
+      body.branch = form.branch
+      return body
+    }
+    body.rank = parseInt(form.rank)
+    body.gender = form.gender
+    body.branch = form.branch
+    if (form.crl) body.crlRank = parseInt(form.crl)
+    if (form.exam === 'JEE_MAIN') body.homeState = form.homeState
+    return body
+  }
 
   async function handlePreview() {
-    if (!form.rank) { setError('Please enter your score / rank'); return }
+    if (isGate && !validPositiveNumber(form.rank)) { setError('Enter a valid GATE score (1–1000)'); return }
+    if (isGate && Number(form.rank) > 1000) { setError('GATE score cannot exceed 1000'); return }
+    if (isGate && Number(form.rank) < 1) { setError('GATE score must be at least 1'); return }
+    if (!isGate && !validPositiveInteger(form.rank)) { setError(`Enter a valid ${isAdvanced ? 'JEE Advanced' : 'JEE Main'} rank (whole number)`); return }
+    if (isAdvanced && Number(form.rank) > 50000) { setError('JEE Advanced rank cannot exceed 50,000 — please check'); return }
+    if (isMain && Number(form.rank) > 10000000) { setError('JEE Main rank seems too high — please check'); return }
+    if (!isGate && form.exam === 'JEE_MAIN' && !form.homeState) { setError('Select your home state — required for NIT/GFTI quota'); return }
+    if (!isGate && form.crl && !validPositiveInteger(form.crl)) { setError('CRL rank must be a whole number (e.g. 120000)'); return }
+    if (!isGate && form.crl && Number(form.crl) > 10000000) { setError('CRL rank seems too high — please check'); return }
     setLoading(true); setError('')
     try {
-      const isGate = form.exam === 'GATE'
-      const body: any = { examType: form.exam, category: form.category, branch: form.branch, gender: form.gender }
-      if (isGate) body.score = parseInt(form.rank)
-      else { body.rank = parseInt(form.rank); if (form.crl) body.crl = parseInt(form.crl); body.homeState = form.homeState }
+      const body = buildPredictionBody()
       const res = await fetch('/api/predict', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
       setPreview((data.results || []).slice(0,3))
       setStep(2)
-    } catch(e:any) { setError(e.message || 'Something went wrong') }
+    } catch(e) { setError(e instanceof Error ? e.message : 'Something went wrong') }
     setLoading(false)
   }
 
   async function handlePayment() {
-    if (!form.name || !form.email) { setError('Name and email are required'); return }
+    if (!form.name.trim()) { setError('Please enter your full name'); return }
+    if (!validName(form.name)) { setError('Name should only contain letters (min 2 characters)'); return }
+    if (!form.email.trim()) { setError('Please enter your email address'); return }
+    if (!validEmail(form.email)) { setError('Enter a valid email (e.g. you@gmail.com)'); return }
+    if (form.phone && !validPhone(form.phone)) { setError('Enter a valid 10-digit mobile number (e.g. 9876543210)'); return }
     setLoading(true); setError('')
 
-    // Razorpay not integrated yet — skip payment and go straight to results
-    const params = new URLSearchParams({ exam:form.exam, rank:form.rank, category:form.category, branch:form.branch, gender:form.gender, homeState:form.homeState, paid:'true' })
-    const resultUrl = `/results?${params.toString()}`
-    setTimeout(() => router.push(resultUrl), 600)
+    const reportPayload = buildPredictionBody()
+    const goToResults = (accessToken: string) => {
+      const params = new URLSearchParams({
+      exam: form.exam,
+      rank: form.rank,
+      category: form.category,
+      branch: form.branch,
+      gender: form.gender,
+      homeState: form.homeState,
+      crl: form.crl,
+        accessToken,
+      })
+      router.push(`/results?${params.toString()}`)
+    }
+
+    try {
+      const orderRes = await fetch('/api/payment/create-order', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ examType: form.exam, name: form.name, email: form.email, phone: form.phone }),
+      })
+      const order = await orderRes.json() as OrderResponse
+      if (!orderRes.ok || order.error || !order.orderId || !order.amount || !order.currency) {
+        throw new Error(order.error || 'Payment could not be started')
+      }
+
+      if (order.mock) {
+        const verifyRes = await fetch('/api/payment/verify', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ mockPayment: true, reportPayload }),
+        })
+        const verified = await verifyRes.json() as VerifyResponse
+        if (!verifyRes.ok || !verified.accessToken) throw new Error(verified.error || 'Payment verification failed')
+        goToResults(verified.accessToken)
+        return
+      }
+
+      const Razorpay = window.Razorpay as RazorpayConstructor | undefined
+      if (!Razorpay || !order.keyId) throw new Error('Razorpay checkout is not available')
+      const checkout = new Razorpay({
+        key: order.keyId,
+        amount: order.amount,
+        currency: order.currency,
+        name: 'CollegeCompass',
+        description: `${form.exam === 'GATE' ? 'GATE' : 'JEE'} prediction report`,
+        order_id: order.orderId,
+        prefill: { name: form.name, email: form.email, contact: form.phone },
+        handler: async response => {
+          const verifyRes = await fetch('/api/payment/verify', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+              reportPayload,
+            }),
+          })
+          const verified = await verifyRes.json() as VerifyResponse
+          if (!verifyRes.ok || !verified.accessToken) {
+            setError(verified.error || 'Payment verification failed')
+            setLoading(false)
+            return
+          }
+          goToResults(verified.accessToken)
+        },
+        modal: { ondismiss: () => setLoading(false) },
+      })
+      checkout.open()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Payment failed')
+      setLoading(false)
+    }
   }
 
-  const examLabels: Record<string,string> = { GATE:'GATE', JEE_MAIN:'JEE Main', JEE_ADVANCED:'JEE Advanced' }
   const isGate = form.exam === 'GATE'
+  const isAdvanced = form.exam === 'JEE_ADVANCED'
+  const isMain = form.exam === 'JEE_MAIN'
   const chanceColor = (c:string) => c==='High'?'var(--ok,#1f9d6b)':c==='Medium'?'var(--accent)':'#e0483c'
   const chanceBg   = (c:string) => c==='High'?'rgba(31,157,107,0.12)':c==='Medium'?'var(--accent-bg)':'rgba(224,72,60,0.12)'
 
   return (
-    <div style={{ 
-      minHeight:'100vh', paddingBottom:'4rem',
-      '--bg': '#0a0a09', '--bg-1': '#141413', '--bg-card': '#1a1a18', '--bg-muted': '#141413',
-      '--border': 'rgba(255,255,255,0.08)', '--border-strong': 'rgba(255,255,255,0.15)',
-      '--text': '#f5f3ef', '--text-muted': '#a8a5a0', '--text-faint': '#6b6966',
-      background: 'var(--bg)', color: 'var(--text)'
-    } as React.CSSProperties}>
+    <div style={{ minHeight:'100vh', background:'var(--bg)', color:'var(--text)', paddingBottom:'4rem' }}>
       {/* Sticky nav */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(10,10,9,.85)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="nav-wrapper">
         <nav className="nav">
-          <Link href="/" className="nav-logo" style={{ color: '#f5f3ef' }}>college<span>compass</span><span style={{color:'var(--accent)'}}>.</span></Link>
-          <div style={{ color:'#a8a5a0', fontSize:'0.85rem' }}>{isGate ? '🎓 GATE Predictor' : '📐 JEE Predictor'}</div>
-          <div style={{ fontSize:'0.82rem', color:'#a8a5a0' }}>Powered by official {isGate?'CCMT/COAP':'JoSAA/CSAB'} cutoffs</div>
+          <Link href="/" className="nav-logo">college<span>compass</span><span style={{color:'var(--accent)'}}>.</span></Link>
+          <div style={{ color:'var(--text-muted)', fontSize:'0.85rem', fontFamily:'Satoshi,Inter,sans-serif', fontWeight:600 }}>{isGate ? 'GATE Predictor' : isAdvanced ? 'JEE Advanced Predictor' : 'JEE Main Predictor'}</div>
+          <div className="hide-sm" style={{ fontSize:'0.82rem', color:'var(--text-faint)', fontFamily:'Inter,sans-serif' }}>Official {isGate ? 'CCMT / COAP' : isAdvanced ? 'JoSAA' : 'JoSAA / CSAB'} data</div>
         </nav>
       </div>
 
       {/* Content */}
-      <div style={{ display:'flex', gap:'3rem', maxWidth:1100, margin:'0 auto', padding:'4rem 1.5rem', alignItems:'flex-start', flexWrap:'wrap' }}>
+      <div className="predict-layout">
 
         {/* Left: info panel */}
-        <div style={{ flex:'1 1 300px' }} className="fade-up hide-sm">
+        <div className="predict-info fade-up hide-sm">
           <div className="pill" style={{ marginBottom:'1.5rem' }}>Step {step} of 2</div>
           <h1 style={{ fontSize:'clamp(2rem,4vw,2.8rem)', lineHeight:1.1, marginBottom:'1rem' }}>
             {step===1 ? <>Enter your<br/><span className="gradient-text">details.</span></> : <>Preview &<br/><span className="gradient-text">unlock.</span></>}
           </h1>
           <p style={{ color:'var(--text-muted)', lineHeight:1.7, marginBottom:'2rem', fontSize:'0.95rem' }}>
             {step===1
-              ? 'We match your score/rank against every published cutoff — category, gender pool, home-state quota all applied.'
+              ? isGate ? 'We match your GATE score against every CCMT & COAP cutoff — category and paper eligibility applied.'
+                : isAdvanced ? 'We match your JEE Advanced rank against every IIT cutoff — category, gender pool, all applied.'
+                : 'We match your JEE Main rank against every NIT/IIIT/GFTI cutoff — category, gender pool, home-state quota all applied.'
               : 'Your top 3 matches are shown free. Unlock the complete list with PDF download for just ₹49 — one-time.'}
           </p>
           {/* Progress */}
@@ -114,7 +310,7 @@ function PredictForm() {
           <div className="glass" style={{ marginTop:'2.5rem', padding:'1.4rem', borderRadius:'var(--r)' }}>
             <div style={{ fontFamily:'Satoshi,Inter,sans-serif', fontWeight:700, fontSize:'0.82rem', marginBottom:'0.9rem', color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.06em' }}>Why trust us</div>
             {[
-              '✓  Official 2025 JoSAA · CCMT · COAP data',
+              isGate ? '✓  Official 2025 CCMT · COAP cutoff data' : isAdvanced ? '✓  Official 2025 JoSAA IIT cutoff data' : '✓  Official 2025 JoSAA · CSAB cutoff data',
               '✓  Last-round cutoffs — most accurate threshold',
               '✓  Secure Razorpay payment · no account needed',
             ].map(t=>(
@@ -124,7 +320,7 @@ function PredictForm() {
         </div>
 
         {/* Right: form card */}
-        <div style={{ flex:'1 1 420px', maxWidth:520 }} className="fade-up fade-up-2">
+        <div className="predict-form fade-up fade-up-2">
           <div className="glass" style={{ borderRadius:'var(--r-lg)', padding:'2.2rem', boxShadow:'var(--shadow-md)' }}>
 
             {step === 1 && (
@@ -134,8 +330,8 @@ function PredictForm() {
                 <div>
                   <label style={L}>Exam</label>
                   <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'0.5rem' }}>
-                    {[{v:'GATE',l:'GATE'},{v:'JEE_MAIN',l:'JEE Main'},{v:'JEE_ADVANCED',l:'JEE Advanced'}].map(e=>(
-                      <button key={e.v} onClick={()=>u('exam',e.v)} style={{ padding:'0.6rem 0.4rem', borderRadius:9, cursor:'pointer', fontFamily:'Satoshi,Inter,sans-serif', fontWeight:700, fontSize:'0.82rem', border:'1.5px solid', transition:'all .18s',
+                    {([{v:'GATE',l:'GATE'},{v:'JEE_MAIN',l:'JEE Main'},{v:'JEE_ADVANCED',l:'JEE Advanced'}] as const).map(e=>(
+                      <button key={e.v} onClick={()=>setExam(e.v)} style={{ padding:'0.6rem 0.4rem', borderRadius:9, cursor:'pointer', fontFamily:'Satoshi,Inter,sans-serif', fontWeight:700, fontSize:'0.82rem', border:'1.5px solid', transition:'all .18s',
                         background:form.exam===e.v?'var(--text)':'var(--bg-1)',
                         borderColor:form.exam===e.v?'var(--text)':'var(--border-strong)',
                         color:form.exam===e.v?'var(--bg)':'var(--text-muted)' }}>
@@ -147,20 +343,21 @@ function PredictForm() {
 
                 {/* Score / Rank */}
                 <div>
-                  <label style={L}>{isGate ? 'GATE Score' : 'JEE Rank'}</label>
-                  <input type="number" className="input-field" placeholder={isGate?'e.g. 750':'e.g. 12000'} value={form.rank} onChange={e=>u('rank',e.target.value)} />
+                  <label style={L}>{isGate ? 'GATE Score' : isAdvanced ? 'JEE Advanced Category Rank' : 'JEE Main Category Rank'}</label>
+                  <input type="number" className="input-field" placeholder={isGate ? 'e.g. 750' : isAdvanced ? 'e.g. 1500' : 'e.g. 12000'} value={form.rank} onChange={e=>u('rank',e.target.value)} />
+                  {!isGate && <div style={{fontSize:'0.72rem',color:'var(--text-muted)',marginTop:'0.3rem'}}>{isAdvanced ? 'Your rank in your category on the JEE Advanced merit list. For GEN, this is your CRL.' : 'Your rank in your category on the JEE Main merit list. For GEN, this is your CRL.'}</div>}
                 </div>
 
                 {/* CRL rank (JEE non-GEN) */}
                 {!isGate && form.category !== 'GEN' && (
                   <div>
-                    <label style={L}>CRL Rank <span style={{fontWeight:400,color:'var(--text-muted)'}}>— Common Rank List</span></label>
-                    <input type="number" className="input-field" placeholder="e.g. 120000" value={form.crl} onChange={e=>u('crl',e.target.value)} />
-                    <div style={{fontSize:'0.72rem',color:'var(--text-muted)',marginTop:'0.3rem'}}>Needed for open seats & CSAB. Leave blank for reserved-seat only.</div>
+                    <label style={L}>{isAdvanced ? 'JEE Advanced CRL' : 'JEE Main CRL'} <span style={{fontWeight:400,color:'var(--text-muted)'}}>— All India Rank</span></label>
+                    <input type="number" className="input-field" placeholder={isAdvanced ? 'e.g. 8000' : 'e.g. 120000'} value={form.crl} onChange={e=>u('crl',e.target.value)} />
+                    <div style={{fontSize:'0.72rem',color:'var(--text-muted)',marginTop:'0.3rem'}}>{isAdvanced ? 'Your All India Rank (CRL) in JEE Advanced. Needed to compete for OPEN seats at IITs.' : 'Your All India Rank (CRL) in JEE Main. Needed for OPEN seats & CSAB colleges.'}</div>
                   </div>
                 )}
 
-                {/* Category + Branch (branch only for GATE) */}
+                {/* Category + Branch */}
                 <div style={{ display:'grid', gridTemplateColumns:isGate?'1fr 1fr':'1fr', gap:'0.85rem' }}>
                   <div>
                     <label style={L}>Category</label>
@@ -182,9 +379,15 @@ function PredictForm() {
                 {!isGate && (
                   <>
                     <div>
+                      <label style={L}>Desired Branch</label>
+                      <select className="input-field" value={form.branch} onChange={e=>u('branch',e.target.value)}>
+                        {JEE_BRANCHES.map(b=><option key={b.code} value={b.code}>{b.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
                       <label style={L}>Gender</label>
                       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.5rem' }}>
-                        {['Male','Female'].map(g=>(
+                        {(['Male','Female'] as const).map(g=>(
                           <button key={g} onClick={()=>u('gender',g)} style={{ padding:'0.65rem', borderRadius:9, cursor:'pointer', fontFamily:'Satoshi,Inter,sans-serif', fontWeight:600, fontSize:'0.88rem', border:'1.5px solid', transition:'all .18s',
                             background:form.gender===g?'var(--text)':'var(--bg-1)',
                             borderColor:form.gender===g?'var(--text)':'var(--border-strong)',
@@ -239,7 +442,7 @@ function PredictForm() {
 
                 {/* User details */}
                 <div style={{ fontSize:'0.72rem', fontWeight:700, fontFamily:'Satoshi,Inter,sans-serif', color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.07em' }}>Your details</div>
-                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.75rem' }}>
+                <div className="grid-2" style={{ gap:'0.75rem' }}>
                   <div>
                     <label style={L}>Full Name</label>
                     <input className="input-field" value={form.name} onChange={e=>u('name',e.target.value)} placeholder="Your name" />

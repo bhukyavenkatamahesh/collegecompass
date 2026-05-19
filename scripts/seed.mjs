@@ -1,7 +1,6 @@
 // Run with: node scripts/seed.mjs
 // Seeds the database with sample GATE and JEE cutoff data
 
-import { createClient } from '@libsql/client'
 import { PrismaLibSql } from '@prisma/adapter-libsql'
 import { PrismaClient } from '@prisma/client'
 import { fileURLToPath } from 'url'
