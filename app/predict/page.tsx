@@ -165,12 +165,8 @@ function PredictFooter() {
     <footer style={{ background: '#0a0a09', color: '#f5f3ef', padding: '2.5rem 0 1.2rem' }}>
       <div className="container">
         <div
+          className="footer-columns"
           style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '1.5rem',
-            alignItems: 'flex-start',
             paddingBottom: '1.5rem',
             borderBottom: '1px solid rgba(255,255,255,0.08)',
           }}
@@ -668,6 +664,26 @@ function PredictForm() {
 
         {/* Right: form card */}
         <div className="predict-form fade-up fade-up-2">
+          {/* Mobile-only step indicator (replaces hidden info panel) */}
+          <div className="mobile-step-bar">
+            <span className="pill" style={{ fontSize: '0.75rem' }}>
+              Step {step}/2
+            </span>
+            <div style={{ flex: 1, display: 'flex', gap: '0.4rem' }}>
+              {[1, 2].map(s => (
+                <div
+                  key={s}
+                  style={{
+                    flex: 1,
+                    height: 3,
+                    borderRadius: 99,
+                    background: step >= s ? 'var(--accent)' : 'var(--border)',
+                    transition: 'background .3s',
+                  }}
+                />
+              ))}
+            </div>
+          </div>
           <div
             className="glass predict-card"
             style={{

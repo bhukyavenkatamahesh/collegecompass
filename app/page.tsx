@@ -698,16 +698,7 @@ export default async function Home() {
           <div
             style={{ height: 1, background: 'rgba(255,255,255,0.08)', marginBottom: '2.5rem' }}
           />
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '1.5rem',
-              marginBottom: '1.5rem',
-              alignItems: 'flex-start',
-            }}
-          >
+          <div className="footer-columns" style={{ marginBottom: '1.5rem' }}>
             <div style={{ maxWidth: 380 }}>
               <div className="nav-logo" style={{ marginBottom: '0.55rem', color: '#f5f3ef' }}>
                 college<span style={{ color: 'var(--accent)' }}>compass</span>.

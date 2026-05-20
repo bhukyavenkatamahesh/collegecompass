@@ -302,10 +302,10 @@ function ResultsContent() {
           >
             Your {examLabel} Results
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div className="results-nav-right">
             <NavAuth />
             <button onClick={downloadPDF} disabled={pdfLoading} className="btn btn-primary btn-sm">
-              {pdfLoading ? '⏳ Generating…' : '↓ Download PDF'}
+              {pdfLoading ? '⏳…' : '↓ PDF'}
             </button>
           </div>
         </nav>
@@ -374,7 +374,7 @@ function ResultsContent() {
 
         {/* Type filter pills */}
         <div
-          className="fade-up"
+          className="fade-up filter-pills-row"
           style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.6rem' }}
         >
           {types.map(t => (
@@ -706,6 +706,7 @@ function ResultsContent() {
             {/* Page controls */}
             {totalPages > 1 && (
               <div
+                className="pagination-controls"
                 style={{
                   display: 'flex',
                   alignItems: 'center',

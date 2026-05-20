@@ -379,14 +379,10 @@ export default function DashboardPage() {
               return (
                 <div
                   key={p.id}
-                  className="glass glass-hover"
+                  className="glass glass-hover dash-prediction-card"
                   style={{
                     borderRadius: 'var(--r-lg)',
                     padding: 'clamp(1rem,2.5vw,1.3rem) clamp(1rem,2.5vw,1.5rem)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '1rem',
-                    flexWrap: 'wrap',
                   }}
                 >
                   {/* Left: exam details */}
