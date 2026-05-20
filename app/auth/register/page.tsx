@@ -98,7 +98,7 @@ function RegisterForm() {
       </Link>
 
       <div
-        className="glass"
+        className="glass auth-card"
         style={{
           width: '100%',
           maxWidth: 420,
