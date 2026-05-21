@@ -509,12 +509,12 @@ function PredictForm() {
   }
 
   const chanceColor = (c: string) =>
-    c === 'High' ? 'var(--ok,#1f9d6b)' : c === 'Medium' ? 'var(--accent)' : '#e0483c'
+    c === 'High' ? 'var(--ok,#1f9d6b)' : c === 'Medium' ? 'var(--brand)' : '#e0483c'
   const chanceBg = (c: string) =>
     c === 'High'
       ? 'rgba(31,157,107,0.12)'
       : c === 'Medium'
-        ? 'var(--accent-bg)'
+        ? 'var(--brand-bg)'
         : 'rgba(224,72,60,0.12)'
 
   return (
@@ -601,7 +601,7 @@ function PredictForm() {
                   flex: 1,
                   height: 4,
                   borderRadius: 99,
-                  background: step >= s ? 'var(--accent)' : 'var(--border)',
+                  background: step >= s ? 'var(--brand)' : 'var(--border)',
                   transition: 'background .3s',
                 }}
               />
@@ -613,7 +613,7 @@ function PredictForm() {
                 key={l}
                 style={{
                   fontSize: '0.72rem',
-                  color: step > i ? 'var(--accent)' : 'var(--text-faint)',
+                  color: step > i ? 'var(--brand)' : 'var(--text-faint)',
                   fontWeight: step > i ? 700 : 400,
                   fontFamily: 'Satoshi,Inter,sans-serif',
                 }}
@@ -677,7 +677,7 @@ function PredictForm() {
                     flex: 1,
                     height: 3,
                     borderRadius: 99,
-                    background: step >= s ? 'var(--accent)' : 'var(--border)',
+                    background: step >= s ? 'var(--brand)' : 'var(--border)',
                     transition: 'background .3s',
                   }}
                 />
@@ -867,7 +867,7 @@ function PredictForm() {
                     {/* Category */}
                     <div>
                       <label style={L}>
-                        Category <span style={{ fontWeight: 400, color: 'var(--accent)' }}>*</span>
+                        Category <span style={{ fontWeight: 400, color: 'var(--brand)' }}>*</span>
                       </label>
                       <select
                         className="input-field"
@@ -894,7 +894,7 @@ function PredictForm() {
                           <span
                             style={{
                               fontWeight: 400,
-                              color: needsCsabCrl ? 'var(--accent)' : 'var(--text-muted)',
+                              color: needsCsabCrl ? 'var(--brand)' : 'var(--text-muted)',
                             }}
                           >
                             {' '}
@@ -914,7 +914,7 @@ function PredictForm() {
                     {/* Seat pool */}
                     <div>
                       <label style={L}>
-                        Seat Pool <span style={{ fontWeight: 400, color: 'var(--accent)' }}>*</span>
+                        Seat Pool <span style={{ fontWeight: 400, color: 'var(--brand)' }}>*</span>
                       </label>
                       <div
                         style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}
@@ -979,7 +979,7 @@ function PredictForm() {
                     <div>
                       <label style={L}>
                         12th Class Domicile State{' '}
-                        <span style={{ fontWeight: 400, color: 'var(--accent)' }}>*</span>
+                        <span style={{ fontWeight: 400, color: 'var(--brand)' }}>*</span>
                       </label>
                       <select
                         className="input-field"
@@ -1225,7 +1225,7 @@ function PredictForm() {
                 {!session && (
                   <div
                     style={{
-                      background: 'var(--accent-bg)',
+                      background: 'var(--brand-bg)',
                       border: '1px solid rgba(37,99,235,0.15)',
                       borderRadius: 'var(--r-sm)',
                       padding: '0.7rem 1rem',
@@ -1247,7 +1247,7 @@ function PredictForm() {
                       <Link
                         href="/auth/login"
                         style={{
-                          color: 'var(--accent)',
+                          color: 'var(--brand)',
                           fontWeight: 600,
                           textDecoration: 'none',
                           marginLeft: '0.25rem',
@@ -1258,7 +1258,7 @@ function PredictForm() {
                       {' or '}
                       <Link
                         href="/auth/register"
-                        style={{ color: 'var(--accent)', fontWeight: 600, textDecoration: 'none' }}
+                        style={{ color: 'var(--brand)', fontWeight: 600, textDecoration: 'none' }}
                       >
                         register free
                       </Link>

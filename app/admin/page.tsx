@@ -285,8 +285,8 @@ export default function AdminPage() {
                 marginBottom: '0.3rem',
               }}
             >
-              college<span style={{ color: 'var(--accent)' }}>compass</span>
-              <span style={{ color: 'var(--accent)' }}>.</span>
+              college<span style={{ color: 'var(--brand)' }}>compass</span>
+              <span style={{ color: 'var(--brand)' }}>.</span>
             </div>
             <h2 style={{ fontSize: '1.5rem', marginBottom: '0.3rem' }}>Admin Login</h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
@@ -361,8 +361,8 @@ export default function AdminPage() {
               letterSpacing: '-0.04em',
             }}
           >
-            college<span style={{ color: 'var(--accent)' }}>compass</span>
-            <span style={{ color: 'var(--accent)' }}>.</span>
+            college<span style={{ color: 'var(--brand)' }}>compass</span>
+            <span style={{ color: 'var(--brand)' }}>.</span>
           </div>
           <span
             style={{
@@ -651,7 +651,7 @@ export default function AdminPage() {
                           <td style={{ padding: '0.75rem 1rem' }}>
                             <span
                               style={{
-                                color: 'var(--accent)',
+                                color: 'var(--brand)',
                                 fontWeight: 700,
                                 fontFamily: 'Satoshi,Inter,sans-serif',
                               }}

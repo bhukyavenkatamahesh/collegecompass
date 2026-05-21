@@ -45,7 +45,7 @@ const EXAM_EMOJI: Record<string, string> = {
 
 // Badge colours — blue/violet palette
 const EXAM_COLORS: Record<string, { bg: string; color: string }> = {
-  GATE: { bg: 'var(--accent-bg)', color: 'var(--accent)' },
+  GATE: { bg: 'var(--brand-bg)', color: 'var(--brand)' },
   JEE_MAIN_JOSAA: { bg: 'rgba(16,185,129,0.10)', color: '#059669' },
   JEE_MAIN_CSAB: { bg: 'rgba(20,184,166,0.10)', color: '#0d9488' },
   JEE_ADVANCED: { bg: 'rgba(124,58,237,0.10)', color: '#7c3aed' },
@@ -242,7 +242,7 @@ export default function DashboardPage() {
                     width: 28,
                     height: 28,
                     borderRadius: '50%',
-                    background: 'var(--accent)',
+                    background: 'var(--brand)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',

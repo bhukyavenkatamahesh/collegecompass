@@ -277,7 +277,7 @@ function RegisterForm() {
           }}
         >
           Already have an account?{' '}
-          <Link href="/auth/login" style={{ color: 'var(--accent)', fontWeight: 600 }}>
+          <Link href="/auth/login" style={{ color: 'var(--brand)', fontWeight: 600 }}>
             Sign in
           </Link>
         </p>

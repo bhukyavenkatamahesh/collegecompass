@@ -13,13 +13,13 @@
   --border-strong: rgba(15, 23, 42, 0.18);
 
   /* Brand Accent */
-  --accent: #2563eb;
-  --accent-2: #1d4ed8;
-  --accent-bg: rgba(37, 99, 235, 0.08);
+  --brand: #2563eb;
+  --brand-2: #1d4ed8;
+  --brand-bg: rgba(37, 99, 235, 0.08);
 
   /* Secondary accent (violet) */
-  --accent-v: #7c3aed;
-  --accent-v2: #6d28d9;
+  --brand-v: #7c3aed;
+  --brand-v2: #6d28d9;
 
   /* Text */
   --text: #0f172a;
@@ -204,7 +204,7 @@ a {
   color: var(--text);
 }
 .section-dark .input-field:focus {
-  border-color: var(--accent);
+  border-color: var(--brand);
 }
 .section-dark .input-field::placeholder {
   color: #475569;
@@ -262,7 +262,7 @@ a {
   flex-shrink: 0;
 }
 .nav-logo span {
-  color: var(--accent);
+  color: var(--brand);
 }
 @media (max-width: 480px) {
   .nav {
@@ -357,7 +357,7 @@ a {
   appearance: none;
 }
 .input-field:focus {
-  border-color: var(--accent);
+  border-color: var(--brand);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 .input-field::placeholder {
@@ -376,9 +376,9 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background: var(--accent-bg);
+  background: var(--brand-bg);
   border: 1px solid rgba(37, 99, 235, 0.2);
-  color: var(--accent);
+  color: var(--brand);
   border-radius: 99px;
   padding: 0.3rem 0.9rem;
   font-size: 0.8rem;
@@ -389,7 +389,7 @@ a {
 .badge-accent {
   display: inline-flex;
   align-items: center;
-  background: var(--accent);
+  background: var(--brand);
   color: #fff;
   font-family: 'Satoshi', 'Inter', sans-serif;
   font-weight: 700;
@@ -413,7 +413,7 @@ a {
   background: var(--border);
 }
 .emph {
-  color: var(--accent);
+  color: var(--brand);
 }
 .weak {
   color: var(--text-muted);

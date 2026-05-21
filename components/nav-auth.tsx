@@ -62,7 +62,7 @@ export function NavAuth({ dark = false }: { dark?: boolean }) {
                 width: 26,
                 height: 26,
                 borderRadius: '50%',
-                background: 'var(--accent)',
+                background: 'var(--brand)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -139,7 +139,7 @@ export function NavAuth({ dark = false }: { dark?: boolean }) {
         style={{
           fontSize: '0.8rem',
           color: dark ? '#0f172a' : '#fff',
-          background: dark ? '#ffffff' : 'var(--accent)',
+          background: dark ? '#ffffff' : 'var(--brand)',
           border: 'none',
           boxShadow: dark ? 'none' : '0 2px 8px -2px rgba(37,99,235,0.4)',
           whiteSpace: 'nowrap',

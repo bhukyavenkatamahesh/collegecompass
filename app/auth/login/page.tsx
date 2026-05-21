@@ -212,7 +212,7 @@ function LoginForm() {
           }}
         >
           Don&apos;t have an account?{' '}
-          <Link href="/auth/register" style={{ color: 'var(--accent)', fontWeight: 600 }}>
+          <Link href="/auth/register" style={{ color: 'var(--brand)', fontWeight: 600 }}>
             Register free
           </Link>
         </p>

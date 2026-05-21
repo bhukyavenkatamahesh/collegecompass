@@ -123,7 +123,7 @@ function chanceBg(c: string) {
   return c === 'High' ? '#dcfce7' : c === 'Medium' ? '#fff7ed' : '#fee2e2'
 }
 function chanceAccent(c: string) {
-  return c === 'High' ? '#16a34a' : c === 'Medium' ? 'var(--accent)' : '#ef4444'
+  return c === 'High' ? '#16a34a' : c === 'Medium' ? 'var(--brand)' : '#ef4444'
 }
 
 function ResultsContent() {
@@ -664,7 +664,7 @@ function ResultsContent() {
                           <div
                             style={{
                               fontSize: '0.7rem',
-                              color: 'var(--accent)',
+                              color: 'var(--brand)',
                               fontWeight: 700,
                               marginTop: '0.15rem',
                             }}
@@ -902,7 +902,7 @@ function ResultsContent() {
           official counselling portal before making decisions.
           <Link
             href="/predict"
-            style={{ marginLeft: '0.5rem', color: 'var(--accent)', fontWeight: 600 }}
+            style={{ marginLeft: '0.5rem', color: 'var(--brand)', fontWeight: 600 }}
           >
             ← Start a new prediction
           </Link>
