@@ -205,16 +205,271 @@ export function getCollegeLogo(instituteName: string): string | null {
 }
 
 /**
- * Generate initials avatar (2 chars) + bg color for unknown institutes.
+ * Maps name fragment → student abbreviation. ORDERING IS CRITICAL — first match wins.
+ *
+ * DB storage forms observed:
+ *  - IITs: both "IIT Delhi" (short) AND "Indian Institute of Technology Bombay" (full)
+ *  - NITs: always full "National Institute of Technology [City]"
+ *  - IIITs: both "IIIT Hyderabad" and "Indian Institute of Information Technology [City]"
+ *           and "(IIIT) [City]" parenthesised variants (handled by paren-stripping in normaliser)
+ *
+ * Strategy:
+ *  1. IISc
+ *  2. IITs — 'iit [city]' keys (short form) then 'indian institute of technology [city]' (full form)
+ *     Full-form IIT keys MUST come before generic 'technology [city]' NIT patterns
+ *  3. Named NITs — distinctive prefix (motilal nehru, malaviya, sardar, visvesvaraya, maulana azad)
+ *  4. IIITs with conflict-prone cities first ('information technology tiruchirappalli',
+ *     'information technology agartala', etc.) then general IIIT patterns
+ *  5. GFTIs & universities (before generic 'technology [city]' to avoid false NIT matches)
+ *  6. Generic NITs — 'technology [city]'
+ */
+const ABBREV_MAP: [string, string][] = [
+  // ── IISc ─────────────────────────────────────────────────────────────────
+  ['iisc', 'IISc'],
+
+  // ── IITs: abbreviated "IIT [City]" form in DB ────────────────────────────
+  ['iit bhu', 'IIT BHU'], // "IIT BHU" plain + "(BHU)" after paren-strip
+  ['technology bhu', 'IIT BHU'], // "Indian Institute of Technology (BHU) Varanasi" after paren-strip
+  ['banaras hindu university', 'IIT BHU'],
+  ['iit ism', 'IIT ISM'], // "IIT ISM Dhanbad" + "(ISM)" after paren-strip
+  ['ism dhanbad', 'IIT ISM'],
+  ['iit kharagpur', 'IITKGP'],
+  ['iit gandhinagar', 'IITGN'],
+  ['iit guwahati', 'IITG'],
+  ['iit hyderabad', 'IITH'],
+  ['iit roorkee', 'IITR'],
+  ['iit bombay', 'IITB'],
+  ['iit madras', 'IITM'],
+  ['iit kanpur', 'IITK'],
+  ['iit delhi', 'IITD'],
+  ['iit jodhpur', 'IITJ'],
+  ['iit indore', 'IITI'],
+  ['iit patna', 'IITP'],
+  ['iit mandi', 'IITMdi'],
+  ['iit tirupati', 'IITTU'],
+  ['iit palakkad', 'IITPkd'],
+  ['iit dharwad', 'IITDhw'],
+  ['iit ropar', 'IITRpr'],
+  ['iit bhilai', 'IITBhl'],
+  ['iit jammu', 'IITJMU'],
+  ['iit goa', 'IITGoa'],
+  ['iit bhubaneswar', 'IITBbs'],
+  ['iit tirupati', 'IITTU'],
+
+  // ── IITs: full "Indian Institute of Technology [City]" form in DB ─────────
+  // MUST come before generic 'technology [city]' NIT patterns
+  ['indian institute of technology bhubaneswar', 'IITBbs'],
+  ['indian institute of technology bombay', 'IITB'],
+  ['indian institute of technology kanpur', 'IITK'],
+  ['indian institute of technology madras', 'IITM'],
+  ['indian institute of technology kharagpur', 'IITKGP'],
+  ['indian institute of technology roorkee', 'IITR'],
+  ['indian institute of technology guwahati', 'IITG'],
+  ['indian institute of technology hyderabad', 'IITH'],
+  ['indian institute of technology gandhinagar', 'IITGN'],
+  ['indian institute of technology jodhpur', 'IITJ'],
+  ['indian institute of technology indore', 'IITI'],
+  ['indian institute of technology mandi', 'IITMdi'],
+  ['indian institute of technology tirupati', 'IITTU'],
+  ['indian institute of technology palakkad', 'IITPkd'],
+  ['indian institute of technology dharwad', 'IITDhw'],
+  ['indian institute of technology ropar', 'IITRpr'],
+  ['indian institute of technology bhilai', 'IITBhl'],
+  ['indian institute of technology jammu', 'IITJMU'],
+  ['indian institute of technology delhi', 'IITD'],
+  ['indian institute of technology goa', 'IITGoa'],
+  ['indian institute of technology patna', 'IITP'],
+
+  // ── Named NITs ────────────────────────────────────────────────────────────
+  ['motilal nehru', 'MNNIT'],
+  ['malaviya national', 'MNIT'],
+  ['sardar vallabhbhai', 'SVNIT'],
+  ['visvesvaraya', 'VNIT'],
+  ['maulana azad', 'MANIT'],
+
+  // ── IIITs with conflict-prone city names — must precede NIT city patterns ─
+  ['information technology tiruchirappalli', 'IIITTri'], // before 'technology tiruchirappalli'→NITT
+  ['information technology agartala', 'IIITAgt'], // before 'agartala'→NITA
+  ['information technology bhubaneswar', 'IIITBbs'], // before any 'technology bhubaneswar'
+  ['information technology naya raipur', 'IIITNRpr'], // before 'technology raipur'→NITRPR
+
+  // ── IIITs — general (both short "IIIT [City]" and full-name forms) ────────
+  ['indraprastha institute', 'IIITD'],
+  ['iiit hyderabad', 'IIITH'],
+  ['information technology hyderabad', 'IIITH'],
+  ['iiit allahabad', 'IIITA'],
+  ['information technology allahabad', 'IIITA'],
+  ['iiit bangalore', 'IIITB'],
+  ['information technology bangalore', 'IIITB'],
+  ['iiit delhi', 'IIITD'],
+  ['information technology delhi', 'IIITD'],
+  ['atal bihari', 'IIITM'],
+  ['iiit gwalior', 'IIITM'],
+  ['information technology gwalior', 'IIITM'],
+  ['gwalior', 'IIITM'],
+  ['iiit nagpur', 'IIITNgp'],
+  ['information technology nagpur', 'IIITNgp'],
+  ['kancheepuram', 'IIITDMK'],
+  ['dwarka prasad', 'IIITDMJ'],
+  ['iiit jabalpur', 'IIITDMJ'],
+  ['information technology jabalpur', 'IIITDMJ'],
+  ['iiit kurnool', 'IIITK'],
+  ['information technology kurnool', 'IIITK'],
+  ['kurnool', 'IIITK'], // "Design and Manufacturing, Kurnool" — city after comma
+  ['iiit lucknow', 'IIITL'],
+  ['information technology lucknow', 'IIITL'],
+  ['iiit pune', 'IIITP'],
+  ['information technology pune', 'IIITP'],
+  ['iiit vadodara', 'IIITV'],
+  ['information technology vadodara', 'IIITV'],
+  ['iiit sri city', 'IIITSC'],
+  ['information technology sri city', 'IIITSC'],
+  ['iiit guwahati', 'IIITGhy'],
+  ['information technology guwahati', 'IIITGhy'],
+  ['iiit sonepat', 'IIITSnp'],
+  ['information technology sonepat', 'IIITSnp'],
+  ['kilohrad', 'IIITSnp'], // "IIIT Kilohrad, Sonepat" variant
+  ['sonepat', 'IIITSnp'],
+  ['iiit bhopal', 'IIITBpl'],
+  ['information technology bhopal', 'IIITBpl'],
+  ['iiit senapati', 'IIITMni'],
+  ['information technology senapati', 'IIITMni'], // all-caps full name form
+  ['iiit una', 'IIITUna'],
+  ['information technology una', 'IIITUna'],
+  ['iiit ranchi', 'IIITRnc'],
+  ['information technology ranchi', 'IIITRnc'],
+  ['iiit surat', 'IIITSrt'],
+  ['information technology surat', 'IIITSrt'],
+  // NOTE: 'surat' standalone removed — it matched "Surathkal" (NITK). After paren-stripping,
+  //       "(IIIT) Surat" becomes "iiit surat" which matches above.
+  ['iiit kalyani', 'IIITKlni'],
+  ['information technology kalyani', 'IIITKlni'],
+  ['iiit dharwad', 'IIITDhw'],
+  ['information technology dharwad', 'IIITDhw'],
+  ['iiit kota', 'IIITKota'],
+  ['information technology kota', 'IIITKota'],
+  ['information technology bhagalpur', 'IIITBhg'],
+  ['iiit bhagalpur', 'IIITBhg'],
+  ['information technology raichur', 'IIITRcr'],
+  ['iiit raichur', 'IIITRcr'],
+  ['iiit kottayam', 'IIITKtm'],
+  ['information technology kottayam', 'IIITKtm'],
+
+  // ── GFTIs & universities — MUST come before generic 'technology [city]' ───
+  ['gati shakti', 'GSV'], // before 'vadodara'→IIITV
+  ['space science', 'IIST'],
+  ['shibpur', 'IIEST'],
+  ['bengal engineering', 'IIEST'],
+  ['national institute of electronics', 'NIELIT'],
+  ['nielit', 'NIELIT'],
+  ['nitttr', 'NITTTR'], // catches "(NITTTR)" after paren-strip
+  ['teachers training', 'NITTTR'],
+  ['defence institute of advanced technology', 'DIAT'],
+  ['jawaharlal nehru university', 'JNU'],
+  ['punjab engineering college', 'PEC'],
+  ['sant longowal', 'SLIET'],
+  ['school of planning & architecture', 'SPA'],
+  ['school of planning and architecture', 'SPA'],
+  ['national institute of foundry', 'NIFFT'],
+  ['tezpur university', 'TezU'],
+  ['university of hyderabad', 'UoH'],
+  ['delhi technological university', 'DTU'],
+  ['netaji subhas', 'NSUT'],
+  ['birla institute of technology', 'BIT Mesra'],
+  ['institute of chemical technology', 'ICT Mumbai'],
+  ['central institute of technology', 'CITKjr'], // CIT Kokrajhar; before generic 'technology'
+  ['handloom technology', 'IIHT'],
+  ['carpet technology', 'IICT'],
+  ['maritime university', 'IMU'],
+  ['indira gandhi delhi technical', 'IGDTUW'],
+  ['institute of infrastructure', 'IIITRAM'],
+  ['islamic university of science', 'IUST'],
+  ['gour university', 'DHSGSU'],
+  ['manipal institute of technology', 'MIT Manipal'],
+  ['mizoram university', 'MZU'],
+  ['advanced manufacturing technology', 'NIAMT'],
+  ['food technology entrepreneurship', 'NIFTEM'],
+  ['north eastern regional institute of science', 'NERIST'],
+  ['north-eastern hill university', 'NEHU'],
+  ['deendayal energy', 'PDEU'],
+  ['puducherry technological university', 'PTU'], // before 'technology puducherry'→NITPY
+  ['rajiv gandhi national aviation', 'RGNAU'],
+  ['sardar patel university of police', 'SPUPSJ'],
+  ['g. s. institute of technology', 'SGSITS'],
+  ['vaishno devi', 'SMVDU'],
+  ['sree chitra', 'SCTIMST'],
+  ['csvtu', 'CSVTU'],
+  ['assam university', 'AUSilchar'],
+  ['central university of haryana', 'CUH'],
+  ['central university of jammu', 'CUJammu'],
+  ['central university of kashmir', 'CUK'],
+  ['central university of punjab', 'CUP'],
+  ['central university of rajasthan', 'CURAJ'],
+  ['cu jharkhand', 'CUJhk'],
+  ['gautam buddha', 'GBU'],
+  ['ghani khan', 'GKCIET'],
+  ['guru ghasidas', 'GGV'],
+  ['gurukula kangri', 'GKV'],
+  ['j.k. institute', 'JKIAP'],
+
+  // ── Generic NITs: 'technology [city]' matches "National Institute of
+  //    Technology [City]" but NOT "IIT [City]" (abbreviated form) ─────────────
+  ['technology tiruchirappalli', 'NITT'],
+  ['technology warangal', 'NITW'],
+  ['technology karnataka', 'NITK'],
+  ['surathkal', 'NITK'],
+  ['technology calicut', 'NITC'],
+  ['technology rourkela', 'NITR'],
+  ['technology jamshedpur', 'NITJSR'],
+  ['technology hamirpur', 'NITH'],
+  ['technology silchar', 'NITS'],
+  ['technology durgapur', 'NITDGP'],
+  ['technology kurukshetra', 'NITKKR'],
+  ['technology agartala', 'NITA'],
+  ['agartala', 'NITA'],
+  ['technology meghalaya', 'NITMGH'],
+  ['technology manipur', 'NITMN'],
+  ['technology mizoram', 'NITMZ'],
+  ['technology sikkim', 'NITSKM'],
+  ['technology puducherry', 'NITPY'],
+  ['technology arunachal', 'NITARU'],
+  ['technology uttarakhand', 'NITUK'],
+  ['technology nagaland', 'NITNGL'],
+  ['technology srinagar', 'NITSRI'],
+  ['technology raipur', 'NITRPR'],
+  ['technology jalandhar', 'NITJ'],
+  ['technology andhra pradesh', 'NITAP'],
+  ['technology andhra', 'NITAP'],
+  ['technology patna', 'NITP'],
+  ['technology delhi', 'NITD'],
+  ['technology goa', 'NITG'],
+
+  // ── Broad fallbacks ───────────────────────────────────────────────────────
+  ['vadodara', 'IIITV'], // IIIT Vadodara campus variants (after 'gati shakti' above)
+]
+
+/** Returns the well-known student abbreviation for an institute, or null. */
+export function getInstituteAbbreviation(name: string): string | null {
+  // Normalise: lowercase, strip commas/parens, collapse whitespace
+  // Paren-stripping fixes "(IIIT) Nagpur", "(BHU) Varanasi", "(NITTTR) Bhopal", etc.
+  const lower = name.toLowerCase().replace(/[,()]/g, ' ').replace(/\s+/g, ' ').trim()
+  for (const [key, abbrev] of ABBREV_MAP) {
+    if (lower.includes(key)) return abbrev
+  }
+  return null
+}
+
+/**
+ * Returns label (abbreviation or 2-char initials) + background color for badge fallback.
  */
 export function getInstituteInitials(name: string): { initials: string; bg: string } {
+  const abbrev = getInstituteAbbreviation(name)
   const words = name.trim().split(/\s+/).filter(Boolean)
-  let initials = ''
-  if (words.length === 1) {
-    initials = words[0].slice(0, 2).toUpperCase()
-  } else {
-    initials = (words[0][0] + (words[1]?.[0] ?? '')).toUpperCase()
-  }
+  const initials =
+    abbrev ??
+    (words.length === 1
+      ? words[0].slice(0, 2).toUpperCase()
+      : (words[0][0] + (words[1]?.[0] ?? '')).toUpperCase())
 
   // Deterministic color from name
   let hash = 0

@@ -9,6 +9,7 @@ import {
 } from '@/lib/report-access'
 import { prisma } from '@/lib/db'
 import { auth } from '@/lib/auth-config'
+import { checkRateLimit, getClientIp, LIMITS } from '@/lib/rate-limit'
 
 function isValidSignatureFormat(signature: unknown): signature is string {
   return typeof signature === 'string' && /^[a-f0-9]{64}$/i.test(signature)
@@ -28,6 +29,10 @@ function jsonValue(value: unknown) {
   return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue
 }
 
+function hashToken(token: string): string {
+  return crypto.createHash('sha256').update(token).digest('hex')
+}
+
 async function markPaymentPaid(
   orderId: string,
   paymentId: string,
@@ -43,20 +48,36 @@ async function markPaymentPaid(
   }
   if (payment.status === 'paid' && payment.razorpayPaymentId === paymentId) return
 
+  // If a fingerprint was stored at order-creation time, verify it matches
+  // the reportPayload the client is now claiming — prevents report swapping.
+  const incomingFingerprint = reportFingerprint(payload)
+  if (payment.reportFingerprint && payment.reportFingerprint !== incomingFingerprint) {
+    throw new Error('Report payload does not match the original order')
+  }
+
   await prisma.payment.update({
     where: { id: payment.id },
     data: {
       razorpayPaymentId: paymentId,
       status: 'paid',
       reportPayload: jsonValue(payload),
-      reportFingerprint: reportFingerprint(payload),
-      accessToken: accessToken,
+      reportFingerprint: incomingFingerprint,
+      // Store SHA-256 of the JWT — never the raw token — to limit DB breach impact
+      accessToken: hashToken(accessToken),
       paidAt: new Date(),
     },
   })
 }
 
 export async function POST(req: NextRequest) {
+  const limited = checkRateLimit(getClientIp(req.headers), LIMITS.paymentVerify)
+  if (limited) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: { 'Retry-After': String(limited.retryAfter) } }
+    )
+  }
+
   try {
     const { razorpayOrderId, razorpayPaymentId, razorpaySignature, reportPayload, mockPayment } =
       await req.json()
@@ -118,8 +139,9 @@ export async function POST(req: NextRequest) {
               : 'JEE_MAIN_JOSAA'
             : rp.examType
 
+        const tokenHash = hashToken(accessToken)
         const existing = await prisma.savedPrediction.findFirst({
-          where: { userId: session.user.id, accessToken },
+          where: { userId: session.user.id, accessToken: tokenHash },
         })
         if (!existing) {
           await prisma.savedPrediction.create({
@@ -128,8 +150,8 @@ export async function POST(req: NextRequest) {
               examType,
               counselling: rp.counselling ?? null,
               inputs: jsonValue(rp),
-              totalResults: 0, // populated lazily when user opens dashboard
-              accessToken,
+              totalResults: 0,
+              accessToken: tokenHash, // SHA-256 hash, not raw JWT
               paidAt: new Date(),
             },
           })

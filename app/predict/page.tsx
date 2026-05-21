@@ -31,6 +31,7 @@ type PreviewCollege = {
 type PredictRequest = {
   examType: ExamType
   category: string
+  year?: number
   branch?: string
   gender?: string
   score?: number
@@ -143,6 +144,9 @@ const JEE_BRANCHES = [
   { name: 'Physics', code: 'PHYSICS' },
 ]
 
+const ADMISSION_YEAR = 2026
+const DATA_YEAR = 2025
+
 declare global {
   interface Window {
     Razorpay: unknown
@@ -160,7 +164,6 @@ const L = {
 } as const
 
 function PredictFooter() {
-  const year = 2026
   return (
     <footer style={{ background: '#0f172a', color: '#f1f5f9', padding: '2.5rem 0 1.2rem' }}>
       <div className="container">
@@ -176,8 +179,8 @@ function PredictFooter() {
               college<span style={{ color: '#60a5fa' }}>compass</span>.
             </div>
             <p style={{ color: '#94a3b8', fontSize: '0.83rem', lineHeight: 1.65 }}>
-              Independent predictions using official cutoff data. Not affiliated with JoSAA, CSAB,
-              IIT, NIT, CCMT, COAP, GATE or JEE authorities.
+              {ADMISSION_YEAR} admission guidance using official {DATA_YEAR} cutoff data. Not
+              affiliated with JoSAA, CSAB, IIT, NIT, CCMT, COAP, GATE or JEE authorities.
             </p>
           </div>
           <div style={{ fontSize: '0.82rem', lineHeight: 2, color: '#94a3b8' }}>
@@ -191,9 +194,9 @@ function PredictFooter() {
             >
               Data sources
             </div>
-            <div>GATE {year}: COAP and CCMT</div>
-            <div>JEE {year}: JoSAA and CSAB</div>
-            <div>Updated May 2026</div>
+            <div>GATE: official {DATA_YEAR} COAP and CCMT cutoffs</div>
+            <div>JEE: official {DATA_YEAR} JoSAA and CSAB cutoffs</div>
+            <div>Predicting for {ADMISSION_YEAR} admissions</div>
           </div>
           <div style={{ fontSize: '0.82rem', lineHeight: 2, color: '#94a3b8' }}>
             <div
@@ -221,6 +224,31 @@ function PredictFooter() {
                 CSAB Predictor 2026
               </Link>
             </div>
+          </div>
+          <div style={{ fontSize: '0.82rem', lineHeight: 2, color: '#94a3b8' }}>
+            <div
+              style={{
+                color: '#f1f5f9',
+                fontWeight: 700,
+                marginBottom: '0.2rem',
+                fontFamily: 'Satoshi,Inter,sans-serif',
+              }}
+            >
+              Help
+            </div>
+            {[
+              { label: 'Pricing', href: '/pricing' },
+              { label: 'Contact', href: '/contact' },
+              { label: 'Terms', href: '/terms' },
+              { label: 'Privacy', href: '/privacy' },
+              { label: 'Refund Policy', href: '/refund' },
+            ].map(link => (
+              <div key={link.href}>
+                <Link href={link.href} style={{ color: '#94a3b8' }}>
+                  {link.label}
+                </Link>
+              </div>
+            ))}
           </div>
         </div>
         <div style={{ fontSize: '0.77rem', color: '#64748b', lineHeight: 1.6, paddingTop: '1rem' }}>
@@ -265,19 +293,31 @@ function PredictForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [preview, setPreview] = useState<PreviewCollege[]>([])
+  const [previewTotal, setPreviewTotal] = useState(0)
 
   const u = <K extends keyof FormState>(k: K, v: FormState[K]) => {
     setForm(f => ({ ...f, [k]: v }))
     setError('')
   }
+  const syncPredictUrl = (exam: ExamType, counselling: Counselling) => {
+    const params = new URLSearchParams({ exam })
+    if (exam === 'JEE_MAIN') params.set('counselling', counselling)
+    router.replace(`/predict?${params.toString()}`, { scroll: false })
+  }
   const setExam = (exam: ExamType) => {
+    const nextCounselling = exam === 'JEE_ADVANCED' ? 'JOSAA' : form.counselling
     setForm(f => ({
       ...f,
       exam,
       branch: exam === 'GATE' ? 'CS' : 'ALL',
-      counselling: exam === 'JEE_ADVANCED' ? 'JOSAA' : f.counselling,
+      counselling: nextCounselling,
+      crl: '',
     }))
+    setStep(1)
+    setPreview([])
+    setPreviewTotal(0)
     setError('')
+    syncPredictUrl(exam, nextCounselling)
   }
   const validPositiveNumber = (value: string) => Number.isFinite(Number(value)) && Number(value) > 0
   const validPositiveInteger = (value: string) =>
@@ -290,10 +330,25 @@ function PredictForm() {
   const isMain = form.exam === 'JEE_MAIN'
   const isCsab = isMain && form.counselling === 'CSAB'
   const activeRank = isGate ? form.rank : isAdvanced ? form.advancedRank : form.mainRank
-  const needsCsabCrl = isCsab && form.category !== 'GEN'
+  const isReserved = form.category !== 'GEN'
+  const showCrlInput = !isGate && !isCsab && isReserved
+  const rankName = isAdvanced ? 'JEE Advanced' : 'JEE Main'
+  const rankBasisLabel = isGate || isCsab || !isReserved ? 'CRL Rank' : 'Category Rank'
+  const rankInputLabel = isGate
+    ? `GATE ${ADMISSION_YEAR} Score`
+    : `${rankName} ${ADMISSION_YEAR} ${rankBasisLabel}`
+  const rankInputPlaceholder = isGate ? 'e.g. 750' : isAdvanced ? 'e.g. 5000' : 'e.g. 85000'
+  const rankHelper = isGate
+    ? `We compare your score with official ${DATA_YEAR} CCMT and COAP score cutoffs.`
+    : isCsab
+      ? 'CSAB Special Round cutoffs use All-India CRL for every seat, including reserved categories.'
+      : isReserved
+        ? `${rankName} reserved seats use category rank. Add CRL below to also judge OPEN seats.`
+        : 'OPEN/GEN seats are judged using your All-India CRL.'
+  const hiddenCount = Math.max(previewTotal - preview.length, 0)
 
   function buildPredictionBody(): PredictRequest {
-    const body: PredictRequest = { examType: form.exam, category: form.category }
+    const body: PredictRequest = { examType: form.exam, category: form.category, year: DATA_YEAR }
     if (form.exam === 'GATE') {
       body.score = Number(form.rank)
       body.branch = form.branch
@@ -305,8 +360,8 @@ function PredictForm() {
       body.counselling = form.counselling
       body.homeState = form.homeState
       if (form.counselling === 'CSAB') {
-        // CSAB uses CRL for everything
-        const csabCrl = parseInt(form.category === 'GEN' ? activeRank : form.crl)
+        // CSAB uses CRL for every category and seat type.
+        const csabCrl = parseInt(activeRank)
         body.rank = csabCrl
         body.crlRank = csabCrl
       } else {
@@ -336,11 +391,11 @@ function PredictForm() {
       return
     }
     if (isMain && !form.mainRank) {
-      setError('Enter your JEE Main 2026 category rank')
+      setError(`Enter your ${rankInputLabel}`)
       return
     }
     if (isAdvanced && !form.advancedRank) {
-      setError('Enter your JEE Advanced 2026 category rank')
+      setError(`Enter your ${rankInputLabel}`)
       return
     }
     if (!isGate && !validPositiveInteger(activeRank)) {
@@ -359,12 +414,8 @@ function PredictForm() {
       setError('Select your seat pool')
       return
     }
-    if (!isGate && !form.homeState) {
+    if (isMain && !form.homeState) {
       setError('Select your 12th Class Domicile State')
-      return
-    }
-    if (needsCsabCrl && !form.crl) {
-      setError('Enter your JEE Main CRL for CSAB — CSAB uses CRL for every seat')
       return
     }
     if (!isGate && form.crl && !validPositiveInteger(form.crl)) {
@@ -386,7 +437,16 @@ function PredictForm() {
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
-      setPreview((data.results || []).slice(0, 3))
+      const results = (data.results || []).slice(0, 3)
+      const totalResults = Number(data.totalResults ?? results.length)
+      setPreview(results)
+      setPreviewTotal(totalResults)
+      if (totalResults === 0 || results.length === 0) {
+        setError(
+          'No matches found for these details. Try All branches, check the rank, or change category/source.'
+        )
+        return
+      }
       setStep(2)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong')
@@ -420,15 +480,15 @@ function PredictForm() {
 
     const reportPayload = buildPredictionBody()
     const goToResults = (accessToken: string) => {
-      const resultRank = isCsab && form.category !== 'GEN' ? form.crl : activeRank
+      const resultRank = activeRank
       const params = new URLSearchParams({
         exam: form.exam,
         rank: resultRank,
         category: form.category,
         branch: form.branch,
         gender: form.gender,
-        homeState: form.homeState,
-        crl: form.crl,
+        homeState: isAdvanced ? '' : form.homeState,
+        crl: isCsab ? activeRank : form.crl,
         counselling: form.counselling,
         accessToken,
       })
@@ -584,12 +644,12 @@ function PredictForm() {
           >
             {step === 1
               ? isGate
-                ? 'Enter your GATE 2026 score. We match it against every CCMT & COAP cutoff — category and paper eligibility applied.'
+                ? `Enter your GATE ${ADMISSION_YEAR} score. We predict using official ${DATA_YEAR} CCMT & COAP cutoffs — category and paper eligibility applied.`
                 : isAdvanced
-                  ? 'Enter your JEE Advanced 2026 rank. We match it against every IIT cutoff — category, gender pool, all applied.'
+                  ? `Enter your JEE Advanced ${ADMISSION_YEAR} rank. We predict IIT options using official ${DATA_YEAR} JoSAA cutoffs — category and gender pool applied.`
                   : isCsab
-                    ? 'Enter your JEE Main 2026 rank. CSAB fills vacant NIT/IIIT/GFTI seats after JoSAA — we match your CRL against every CSAB special-round cutoff.'
-                    : 'Enter your JEE Main 2026 rank. We match it against every JoSAA NIT/IIIT/GFTI cutoff — category, gender pool, home-state quota all applied.'
+                    ? `Enter your JEE Main ${ADMISSION_YEAR} CRL. We predict CSAB options using official ${DATA_YEAR} special-round cutoffs.`
+                    : `Enter your JEE Main ${ADMISSION_YEAR} rank. We predict JoSAA options using official ${DATA_YEAR} NIT/IIIT/GFTI cutoffs — category, gender pool and home-state quota applied.`
               : 'Your top 3 matches are shown free. Unlock the complete list with PDF download for just ₹49 — one-time.'}
           </p>
           {/* Progress */}
@@ -643,12 +703,12 @@ function PredictForm() {
             </div>
             {[
               isGate
-                ? '✓  Official 2026 CCMT · COAP cutoff data'
+                ? `✓  Official ${DATA_YEAR} CCMT · COAP cutoff data`
                 : isAdvanced
-                  ? '✓  Official 2026 JoSAA IIT cutoff data'
+                  ? `✓  Official ${DATA_YEAR} JoSAA IIT cutoff data`
                   : isCsab
-                    ? '✓  Official 2026 CSAB special round data'
-                    : '✓  Official 2026 JoSAA cutoff data',
+                    ? `✓  Official ${DATA_YEAR} CSAB special round data`
+                    : `✓  Official ${DATA_YEAR} JoSAA cutoff data`,
               '✓  Last-round cutoffs — most accurate threshold',
               '✓  Secure Razorpay payment · no account needed',
             ].map(t => (
@@ -739,14 +799,24 @@ function PredictForm() {
                   <>
                     {/* Score */}
                     <div>
-                      <label style={L}>GATE 2026 Score</label>
+                      <label style={L}>{rankInputLabel}</label>
                       <input
                         type="number"
                         className="input-field"
-                        placeholder="e.g. 750"
+                        placeholder={rankInputPlaceholder}
                         value={form.rank}
                         onChange={e => u('rank', e.target.value)}
                       />
+                      <p
+                        style={{
+                          color: 'var(--text-muted)',
+                          fontSize: '0.78rem',
+                          lineHeight: 1.5,
+                          marginTop: '0.35rem',
+                        }}
+                      >
+                        {rankHelper}
+                      </p>
                     </div>
 
                     {/* Category + Paper */}
@@ -803,7 +873,11 @@ function PredictForm() {
                               key={c.v}
                               onClick={() => {
                                 setForm(f => ({ ...f, counselling: c.v, crl: '' }))
+                                setStep(1)
+                                setPreview([])
+                                setPreviewTotal(0)
                                 setError('')
+                                syncPredictUrl(form.exam, c.v)
                               }}
                               style={{
                                 padding: '0.6rem 0.4rem',
@@ -841,26 +915,46 @@ function PredictForm() {
                     {/* Rank — only the field relevant to the selected exam */}
                     {isMain && (
                       <div>
-                        <label style={L}>JEE Main 2026 Category Rank</label>
+                        <label style={L}>{rankInputLabel}</label>
                         <input
                           type="number"
                           className="input-field"
-                          placeholder="e.g. 85000"
+                          placeholder={rankInputPlaceholder}
                           value={form.mainRank}
                           onChange={e => u('mainRank', e.target.value)}
                         />
+                        <p
+                          style={{
+                            color: 'var(--text-muted)',
+                            fontSize: '0.78rem',
+                            lineHeight: 1.5,
+                            marginTop: '0.35rem',
+                          }}
+                        >
+                          {rankHelper}
+                        </p>
                       </div>
                     )}
                     {isAdvanced && (
                       <div>
-                        <label style={L}>JEE Advanced 2026 Category Rank</label>
+                        <label style={L}>{rankInputLabel}</label>
                         <input
                           type="number"
                           className="input-field"
-                          placeholder="e.g. 5000"
+                          placeholder={rankInputPlaceholder}
                           value={form.advancedRank}
                           onChange={e => u('advancedRank', e.target.value)}
                         />
+                        <p
+                          style={{
+                            color: 'var(--text-muted)',
+                            fontSize: '0.78rem',
+                            lineHeight: 1.5,
+                            marginTop: '0.35rem',
+                          }}
+                        >
+                          {rankHelper}
+                        </p>
                       </div>
                     )}
 
@@ -887,18 +981,18 @@ function PredictForm() {
                     </div>
 
                     {/* CRL rank for reserved candidates */}
-                    {form.category !== 'GEN' && (
+                    {showCrlInput && (
                       <div>
                         <label style={L}>
                           {isAdvanced ? 'JEE Advanced CRL' : 'JEE Main CRL'}
                           <span
                             style={{
                               fontWeight: 400,
-                              color: needsCsabCrl ? 'var(--brand)' : 'var(--text-muted)',
+                              color: 'var(--text-muted)',
                             }}
                           >
                             {' '}
-                            {needsCsabCrl ? '*' : '(optional)'}
+                            (optional)
                           </span>
                         </label>
                         <input
@@ -976,24 +1070,26 @@ function PredictForm() {
                     </div>
 
                     {/* Domicile */}
-                    <div>
-                      <label style={L}>
-                        12th Class Domicile State{' '}
-                        <span style={{ fontWeight: 400, color: 'var(--brand)' }}>*</span>
-                      </label>
-                      <select
-                        className="input-field"
-                        value={form.homeState}
-                        onChange={e => u('homeState', e.target.value)}
-                      >
-                        <option value="">Select 12th Class Domicile State</option>
-                        {STATES.map(s => (
-                          <option key={s} value={s}>
-                            {s}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    {isMain && (
+                      <div>
+                        <label style={L}>
+                          12th Class Domicile State{' '}
+                          <span style={{ fontWeight: 400, color: 'var(--brand)' }}>*</span>
+                        </label>
+                        <select
+                          className="input-field"
+                          value={form.homeState}
+                          onChange={e => u('homeState', e.target.value)}
+                        >
+                          <option value="">Select 12th Class Domicile State</option>
+                          {STATES.map(s => (
+                            <option key={s} value={s}>
+                              {s}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
 
                     {/* Branch */}
                     <div>
@@ -1031,7 +1127,10 @@ function PredictForm() {
                 <button
                   onClick={handlePreview}
                   disabled={
-                    !activeRank || (!isGate && (!form.gender || !form.homeState)) || loading
+                    !activeRank ||
+                    (!isGate && !form.gender) ||
+                    (isMain && !form.homeState) ||
+                    loading
                   }
                   className="btn btn-primary"
                   style={{
@@ -1042,7 +1141,7 @@ function PredictForm() {
                   }}
                 >
                   {loading
-                    ? 'Analyzing 2026 cutoffs…'
+                    ? `Analyzing ${DATA_YEAR} cutoffs…`
                     : isGate
                       ? 'Predict My Colleges 2026 →'
                       : 'Predict My Colleges 2026 →'}
@@ -1086,7 +1185,7 @@ function PredictForm() {
                       className="pill"
                       style={{ padding: '0.15rem 0.6rem', fontSize: '0.72rem' }}
                     >
-                      50+ more hidden 🔒
+                      {hiddenCount > 0 ? `${hiddenCount} more hidden 🔒` : 'PDF unlock available'}
                     </span>
                   </div>
                   {preview.map((c, i) => (
@@ -1204,7 +1303,7 @@ function PredictForm() {
                 {/* Pay CTA */}
                 <button
                   onClick={handlePayment}
-                  disabled={!form.name || !form.email || loading}
+                  disabled={!form.name || !form.email || previewTotal === 0 || loading}
                   className="btn btn-accent"
                   style={{
                     padding: '0.9rem',

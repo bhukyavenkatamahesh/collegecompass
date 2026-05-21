@@ -1,9 +1,10 @@
 'use client'
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Image from 'next/image'
 import Link from 'next/link'
 import { NavAuth } from '@/components/nav-auth'
-import { getCollegeLogo, getInstituteInitials } from '@/lib/college-logos'
+import { getCollegeLogo, getInstituteInitials, getInstituteAbbreviation } from '@/lib/college-logos'
 
 interface College {
   institute: string
@@ -20,18 +21,21 @@ interface College {
   seatType?: string
   source?: string
   rankBasis?: string
+  year?: number
   chance: 'High' | 'Medium' | 'Low'
   chancePercent: number
 }
 type PredictRequest = {
   examType: string
   category: string
+  year?: number
   branch?: string
   gender?: string
   score?: number
   rank?: number
   crlRank?: number
   homeState?: string
+  counselling?: string
   accessToken?: string
 }
 type PdfDocument = {
@@ -60,14 +64,20 @@ const BRANCH_MAP: Record<string, string> = {
   PHYSICS: 'Physics',
 }
 
+const ADMISSION_YEAR = 2026
+const FALLBACK_DATA_YEAR = 2025
+
 /** CollegeLogo — shows official logo if found, else colored initials avatar */
 function CollegeLogo({ name }: { name: string }) {
+  const [failed, setFailed] = useState(false)
   const logoUrl = getCollegeLogo(name)
-  if (logoUrl) {
+  if (logoUrl && !failed) {
     return (
-      <img
+      <Image
         src={logoUrl}
         alt={name}
+        width={34}
+        height={34}
         style={{
           width: 34,
           height: 34,
@@ -78,37 +88,31 @@ function CollegeLogo({ name }: { name: string }) {
           flexShrink: 0,
           padding: 2,
         }}
-        onError={e => {
-          // Fallback to initials on broken image
-          const target = e.currentTarget
-          const { initials, bg } = getInstituteInitials(name)
-          target.replaceWith(
-            Object.assign(document.createElement('div'), {
-              textContent: initials,
-              style: `width:34px;height:34px;border-radius:6px;background:${bg};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:800;flex-shrink:0;font-family:Satoshi,Inter,sans-serif;letter-spacing:-0.02em`,
-            })
-          )
-        }}
+        onError={() => setFailed(true)}
       />
     )
   }
   const { initials, bg } = getInstituteInitials(name)
+  const len = initials.length
+  const fontSize = len <= 4 ? '0.65rem' : len <= 6 ? '0.58rem' : '0.5rem'
   return (
     <div
       style={{
-        width: 34,
-        height: 34,
+        height: 28,
+        minWidth: 44,
         borderRadius: 6,
         background: bg,
         color: '#fff',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: '0.72rem',
+        fontSize,
         fontWeight: 800,
         flexShrink: 0,
         fontFamily: 'Satoshi,Inter,sans-serif',
-        letterSpacing: '-0.02em',
+        letterSpacing: '-0.01em',
+        padding: '0 6px',
+        whiteSpace: 'nowrap',
       }}
     >
       {initials}
@@ -124,6 +128,90 @@ function chanceBg(c: string) {
 }
 function chanceAccent(c: string) {
   return c === 'High' ? '#16a34a' : c === 'Medium' ? 'var(--brand)' : '#ef4444'
+}
+
+/**
+ * Builds a rich search token string for an institute + program pair.
+ * Strips all spaces/punctuation so queries like "iitdelhi", "nitnagpur",
+ * "iiitallahabad", "iitdhanbad" all resolve correctly.
+ */
+function buildSearchIndex(name: string, program: string): string {
+  const nameLower = name.toLowerCase()
+
+  // 1. Full name with all non-alphanumeric chars removed
+  const nameStripped = nameLower.replace(/[^a-z0-9]/g, '')
+
+  // 2. Abbreviation stripped (e.g. "IIT ISM" → "iitism")
+  const abbrev = (getInstituteAbbreviation(name) ?? '').toLowerCase().replace(/[^a-z0-9]/g, '')
+
+  // 3. "type + city" alias so "nitnagpur", "iiitallahabad", "iitdhanbad" match
+  const STOP = new Set([
+    'national',
+    'indian',
+    'international',
+    'institute',
+    'of',
+    'for',
+    'the',
+    'and',
+    'technology',
+    'information',
+    'engineering',
+    'science',
+    'university',
+    'management',
+    'design',
+    'manufacturing',
+    'advanced',
+    'campus',
+    'off',
+    'deemed',
+    'district',
+    'west',
+    'east',
+    'north',
+    'south',
+    'new',
+  ])
+  const meaningfulWords = nameLower
+    .replace(/[^a-z\s]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 2 && !STOP.has(w))
+  const city = meaningfulWords[meaningfulWords.length - 1] ?? ''
+
+  let typePrefix = ''
+  if (/^iit\s/.test(nameLower) || nameLower.includes('indian institute of technology'))
+    typePrefix = 'iit'
+  else if (nameLower.includes('national institute of technology') || /\bnit\s/.test(nameLower))
+    typePrefix = 'nit'
+  else if (nameLower.includes('information technology') || /^iiit\s/.test(nameLower))
+    typePrefix = 'iiit'
+
+  const alias = typePrefix && city ? typePrefix + city : ''
+
+  // 4. Program stripped
+  const progStripped = program.toLowerCase().replace(/[^a-z0-9]/g, '')
+
+  return [nameStripped, abbrev, alias, nameLower, program.toLowerCase(), progStripped]
+    .filter(Boolean)
+    .join(' ')
+}
+
+function resultMeta(c: College, isGate: boolean) {
+  return [
+    c.instituteType,
+    c.source,
+    isGate ? null : c.rankBasis,
+    c.seatType,
+    c.seatPool,
+    c.quota,
+  ].filter((value): value is string => Boolean(value))
+}
+
+function cutoffDisplay(c: College, isGate: boolean) {
+  return isGate
+    ? `${Math.min(c.openScore, c.closeScore)}-${Math.max(c.openScore, c.closeScore)} score`
+    : `${c.openRank?.toLocaleString()}-${c.closeRank?.toLocaleString()} rank`
 }
 
 function ResultsContent() {
@@ -166,18 +254,25 @@ function ResultsContent() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'All' | 'High' | 'Medium' | 'Low'>('All')
   const [typeFilter, setTypeFilter] = useState('All')
+  const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(1)
   const [pdfLoading, setPdfLoading] = useState(false)
 
   useEffect(() => {
     if (!paid) return
-    const body: PredictRequest = { examType: exam, category, branch, gender }
+    const body: PredictRequest = {
+      examType: exam,
+      category,
+      year: FALLBACK_DATA_YEAR,
+      branch,
+      gender,
+    }
     if (isGate) body.score = parseInt(score)
     else {
       body.rank = parseInt(rank)
       if (crl) body.crlRank = parseInt(crl)
       body.homeState = homeState
-      if (counselling) (body as Record<string, unknown>).counselling = counselling
+      if (counselling) body.counselling = counselling
     }
     body.accessToken = accessToken
     fetch('/api/predict', {
@@ -195,11 +290,16 @@ function ResultsContent() {
   }, [])
 
   const types = ['All', ...Array.from(new Set(colleges.map(c => c.instituteType)))]
-  const filtered = colleges.filter(
-    c =>
-      (filter === 'All' || c.chance === filter) &&
-      (typeFilter === 'All' || c.instituteType === typeFilter)
-  )
+  const filtered = colleges.filter(c => {
+    if (filter !== 'All' && c.chance !== filter) return false
+    if (typeFilter !== 'All' && c.instituteType !== typeFilter) return false
+    if (searchQuery.trim()) {
+      const qNorm = searchQuery.toLowerCase().replace(/[^a-z0-9]/g, '')
+      const tokens = buildSearchIndex(c.institute, c.program)
+      if (!tokens.includes(qNorm)) return false
+    }
+    return true
+  })
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE))
   const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
@@ -212,12 +312,24 @@ function ResultsContent() {
     setTypeFilter(t)
     setPage(1)
   }
+  const setSearch = (q: string) => {
+    setSearchQuery(q)
+    setPage(1)
+  }
 
   const stats = {
     High: colleges.filter(c => c.chance === 'High').length,
     Medium: colleges.filter(c => c.chance === 'Medium').length,
     Low: colleges.filter(c => c.chance === 'Low').length,
   }
+  const dataYear = colleges.find(c => c.year)?.year ?? FALLBACK_DATA_YEAR
+  const basisLabel = isGate
+    ? 'GATE score basis'
+    : isCsab
+      ? 'CSAB CRL basis'
+      : category === 'GEN'
+        ? 'OPEN seat CRL basis'
+        : 'Category rank, plus CRL for OPEN seats'
 
   async function downloadPDF() {
     setPdfLoading(true)
@@ -260,7 +372,7 @@ function ResultsContent() {
         c.instituteType,
         isGate ? Math.min(c.openScore, c.closeScore) : c.openRank?.toLocaleString(),
         isGate ? Math.max(c.openScore, c.closeScore) : c.closeRank?.toLocaleString(),
-        `${c.chancePercent}% ${c.chance}`,
+        c.chance,
       ])
 
       autoTable(doc, {
@@ -375,12 +487,22 @@ function ResultsContent() {
             Results ready
           </div>
           <h1 style={{ fontSize: 'clamp(1.9rem,4.5vw,3rem)', marginBottom: '0.5rem' }}>
-            Your <span className="gradient-text">{examLabel}</span> Matrix
+            Your <span className="gradient-text">{examLabel}</span> Results
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
             {rankLabel} <strong style={{ color: 'var(--text)' }}>{displayVal}</strong> · {category}{' '}
             · {displayBranch || 'All branches'} ·{' '}
             <strong style={{ color: 'var(--text)' }}>{colleges.length}</strong> colleges matched
+          </p>
+          <p
+            style={{
+              marginTop: '0.5rem',
+              fontSize: '0.8rem',
+              color: 'var(--text-faint)',
+              fontFamily: 'Satoshi,Inter,sans-serif',
+            }}
+          >
+            Official {dataYear} cutoff data · {basisLabel} · {ADMISSION_YEAR} admissions
           </p>
         </div>
 
@@ -429,11 +551,18 @@ function ResultsContent() {
           ))}
         </div>
 
-        {/* Type filter pills */}
+        {/* Type filter pills + search */}
         <div
           className="fade-up filter-pills-row"
-          style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.6rem' }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            flexWrap: 'wrap',
+            marginBottom: '1.6rem',
+          }}
         >
+          {/* Pills */}
           {types.map(t => (
             <button
               key={t}
@@ -455,6 +584,77 @@ function ResultsContent() {
               {t}
             </button>
           ))}
+
+          {/* Search box — pushed to the right */}
+          <div style={{ marginLeft: 'auto', position: 'relative', flexShrink: 0 }}>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{
+                position: 'absolute',
+                left: 10,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: 'var(--text-faint)',
+                pointerEvents: 'none',
+              }}
+            >
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Search college or program"
+              value={searchQuery}
+              onChange={e => setSearch(e.target.value)}
+              style={{
+                paddingLeft: 30,
+                paddingRight: searchQuery ? 28 : 12,
+                paddingTop: '0.38rem',
+                paddingBottom: '0.38rem',
+                borderRadius: 99,
+                border: '1.5px solid',
+                borderColor: searchQuery ? 'var(--brand)' : 'var(--border-strong)',
+                background: 'var(--bg-1)',
+                color: 'var(--text)',
+                fontFamily: 'Satoshi,Inter,sans-serif',
+                fontWeight: 500,
+                fontSize: '0.82rem',
+                outline: 'none',
+                width: 220,
+                transition: 'border-color .18s, width .2s',
+              }}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearch('')}
+                style={{
+                  position: 'absolute',
+                  right: 8,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  color: 'var(--text-faint)',
+                  fontSize: '0.85rem',
+                  lineHeight: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+                aria-label="Clear search"
+              >
+                ✕
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Table */}
@@ -466,277 +666,345 @@ function ResultsContent() {
             <div style={{ fontSize: '1.5rem', marginBottom: '0.8rem' }}>⚡</div>
             <div style={{ color: 'var(--text-muted)' }}>Matching against official cutoffs…</div>
           </div>
-        ) : (
+        ) : filtered.length === 0 ? (
           <div
-            className="glass fade-up"
-            style={{
-              borderRadius: 'var(--r-lg)',
-              overflow: 'hidden',
-              boxShadow: 'var(--shadow-md)',
-            }}
+            className="glass fade-up results-empty-state"
+            style={{ borderRadius: 'var(--r-lg)', padding: '2rem', textAlign: 'center' }}
           >
-            <div style={{ overflowX: 'auto' }}>
-              <table
-                style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  fontSize: '0.875rem',
-                  textAlign: 'left',
-                }}
-              >
-                <thead>
-                  <tr
-                    style={{
-                      background: 'var(--bg-muted)',
-                      borderBottom: '1px solid var(--border)',
-                    }}
-                  >
-                    <th
-                      className="col-hide-mobile"
-                      style={{
-                        padding: '0.9rem 0.75rem',
-                        fontFamily: 'Satoshi,Inter,sans-serif',
-                        fontWeight: 700,
-                        fontSize: '0.75rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.06em',
-                        color: 'var(--text-muted)',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      #
-                    </th>
-                    <th
-                      style={{
-                        padding: '0.9rem 0.75rem',
-                        fontFamily: 'Satoshi,Inter,sans-serif',
-                        fontWeight: 700,
-                        fontSize: '0.75rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.06em',
-                        color: 'var(--text-muted)',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      Institute
-                    </th>
-                    <th
-                      style={{
-                        padding: '0.9rem 0.75rem',
-                        fontFamily: 'Satoshi,Inter,sans-serif',
-                        fontWeight: 700,
-                        fontSize: '0.75rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.06em',
-                        color: 'var(--text-muted)',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      Program
-                    </th>
-                    <th
-                      className="col-hide-mobile"
-                      style={{
-                        padding: '0.9rem 0.75rem',
-                        fontFamily: 'Satoshi,Inter,sans-serif',
-                        fontWeight: 700,
-                        fontSize: '0.75rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.06em',
-                        color: 'var(--text-muted)',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      Type
-                    </th>
-                    <th
-                      className="col-hide-mobile"
-                      style={{
-                        padding: '0.9rem 0.75rem',
-                        fontFamily: 'Satoshi,Inter,sans-serif',
-                        fontWeight: 700,
-                        fontSize: '0.75rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.06em',
-                        color: 'var(--text-muted)',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      State
-                    </th>
-                    <th
-                      className="col-hide-mobile"
-                      style={{
-                        padding: '0.9rem 0.75rem',
-                        fontFamily: 'Satoshi,Inter,sans-serif',
-                        fontWeight: 700,
-                        fontSize: '0.75rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.06em',
-                        color: 'var(--text-muted)',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {isGate ? 'Min Score' : 'Open Rank'}
-                    </th>
-                    <th
-                      style={{
-                        padding: '0.9rem 0.75rem',
-                        fontFamily: 'Satoshi,Inter,sans-serif',
-                        fontWeight: 700,
-                        fontSize: '0.75rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.06em',
-                        color: 'var(--text-muted)',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {isGate ? 'Max Score' : 'Close Rank'}
-                    </th>
-                    <th
-                      style={{
-                        padding: '0.9rem 0.75rem',
-                        fontFamily: 'Satoshi,Inter,sans-serif',
-                        fontWeight: 700,
-                        fontSize: '0.75rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.06em',
-                        color: 'var(--text-muted)',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      Chance
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginated.map((c, i) => (
+            <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>No matches found</h2>
+            <p
+              style={{
+                color: 'var(--text-muted)',
+                lineHeight: 1.65,
+                margin: '0 auto 1.2rem',
+                maxWidth: 520,
+              }}
+            >
+              Try clearing filters, selecting All branches, or checking the rank/category entered
+              for this report.
+            </p>
+            <button
+              onClick={() => {
+                setChanceFilter('All')
+                setInstTypeFilter('All')
+                setSearch('')
+              }}
+              className="btn btn-ghost btn-sm"
+            >
+              Clear filters
+            </button>
+          </div>
+        ) : (
+          <>
+            <div
+              className="glass fade-up results-table-surface"
+              style={{
+                borderRadius: 'var(--r-lg)',
+                overflow: 'hidden',
+                boxShadow: 'var(--shadow-md)',
+              }}
+            >
+              <div style={{ overflowX: 'auto' }}>
+                <table
+                  style={{
+                    width: '100%',
+                    borderCollapse: 'collapse',
+                    fontSize: '0.875rem',
+                    textAlign: 'left',
+                  }}
+                >
+                  <thead>
                     <tr
-                      key={i}
-                      style={{ borderBottom: '1px solid var(--border)' }}
-                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-muted)')}
-                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                      style={{
+                        background: 'var(--bg-muted)',
+                        borderBottom: '1px solid var(--border)',
+                      }}
                     >
-                      <td
+                      <th
                         className="col-hide-mobile"
                         style={{
-                          padding: '0.85rem 0.75rem',
-                          color: 'var(--text-faint)',
-                          fontVariantNumeric: 'tabular-nums',
-                        }}
-                      >
-                        {(page - 1) * ITEMS_PER_PAGE + i + 1}
-                      </td>
-                      <td
-                        style={{
-                          padding: '0.75rem 0.75rem',
-                          fontWeight: 600,
+                          padding: '0.9rem 0.75rem',
                           fontFamily: 'Satoshi,Inter,sans-serif',
-                          minWidth: 180,
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                          {/* Logo / initials avatar */}
-                          <CollegeLogo name={c.institute} />
-                          <div>
-                            <div>{c.institute}</div>
-                            {/* Show type tag inline on mobile */}
-                            <div style={{ display: 'none' }} className="show-mobile-inline">
-                              <span
-                                className="tag"
-                                style={{ marginTop: '0.25rem', display: 'inline-block' }}
-                              >
-                                {c.instituteType}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td
-                        style={{
-                          padding: '0.85rem 0.75rem',
-                          color: 'var(--text-muted)',
-                          minWidth: 130,
-                        }}
-                      >
-                        {c.program}
-                        {c.isInterdisciplinary && (
-                          <div
-                            style={{
-                              fontSize: '0.7rem',
-                              color: 'var(--brand)',
-                              fontWeight: 700,
-                              marginTop: '0.15rem',
-                            }}
-                          >
-                            Interdisciplinary ↗
-                          </div>
-                        )}
-                      </td>
-                      <td className="col-hide-mobile" style={{ padding: '0.85rem 0.75rem' }}>
-                        <span className="tag">{c.instituteType}</span>
-                      </td>
-                      <td
-                        className="col-hide-mobile"
-                        style={{
-                          padding: '0.85rem 0.75rem',
+                          fontWeight: 700,
+                          fontSize: '0.75rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.06em',
                           color: 'var(--text-muted)',
                           whiteSpace: 'nowrap',
                         }}
                       >
-                        {c.state}
-                      </td>
-                      <td
+                        #
+                      </th>
+                      <th
+                        style={{
+                          padding: '0.9rem 0.75rem',
+                          fontFamily: 'Satoshi,Inter,sans-serif',
+                          fontWeight: 700,
+                          fontSize: '0.75rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.06em',
+                          color: 'var(--text-muted)',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        Institute
+                      </th>
+                      <th
+                        style={{
+                          padding: '0.9rem 0.75rem',
+                          fontFamily: 'Satoshi,Inter,sans-serif',
+                          fontWeight: 700,
+                          fontSize: '0.75rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.06em',
+                          color: 'var(--text-muted)',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        Program
+                      </th>
+                      <th
                         className="col-hide-mobile"
-                        style={{ padding: '0.85rem 0.75rem', fontVariantNumeric: 'tabular-nums' }}
+                        style={{
+                          padding: '0.9rem 0.75rem',
+                          fontFamily: 'Satoshi,Inter,sans-serif',
+                          fontWeight: 700,
+                          fontSize: '0.75rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.06em',
+                          color: 'var(--text-muted)',
+                          whiteSpace: 'nowrap',
+                        }}
                       >
-                        {isGate
-                          ? Math.min(c.openScore, c.closeScore)
-                          : c.openRank?.toLocaleString()}
-                      </td>
-                      <td
-                        style={{ padding: '0.85rem 0.75rem', fontVariantNumeric: 'tabular-nums' }}
+                        Type
+                      </th>
+                      <th
+                        className="col-hide-mobile"
+                        style={{
+                          padding: '0.9rem 0.75rem',
+                          fontFamily: 'Satoshi,Inter,sans-serif',
+                          fontWeight: 700,
+                          fontSize: '0.75rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.06em',
+                          color: 'var(--text-muted)',
+                          whiteSpace: 'nowrap',
+                        }}
                       >
-                        {isGate
-                          ? Math.max(c.openScore, c.closeScore)
-                          : c.closeRank?.toLocaleString()}
-                      </td>
-                      <td style={{ padding: '0.85rem 0.75rem' }}>
-                        <span
+                        State
+                      </th>
+                      <th
+                        className="col-hide-mobile"
+                        style={{
+                          padding: '0.9rem 0.75rem',
+                          fontFamily: 'Satoshi,Inter,sans-serif',
+                          fontWeight: 700,
+                          fontSize: '0.75rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.06em',
+                          color: 'var(--text-muted)',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {isGate ? 'Min Score' : 'Open Rank'}
+                      </th>
+                      <th
+                        style={{
+                          padding: '0.9rem 0.75rem',
+                          fontFamily: 'Satoshi,Inter,sans-serif',
+                          fontWeight: 700,
+                          fontSize: '0.75rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.06em',
+                          color: 'var(--text-muted)',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {isGate ? 'Max Score' : 'Close Rank'}
+                      </th>
+                      <th
+                        style={{
+                          padding: '0.9rem 0.75rem',
+                          fontFamily: 'Satoshi,Inter,sans-serif',
+                          fontWeight: 700,
+                          fontSize: '0.75rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.06em',
+                          color: 'var(--text-muted)',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        Chance
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginated.map((c, i) => (
+                      <tr
+                        key={i}
+                        style={{ borderBottom: '1px solid var(--border)' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-muted)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                      >
+                        <td
+                          className="col-hide-mobile"
                           style={{
-                            background: chanceBg(c.chance),
-                            color: chanceColor(c.chance),
-                            borderRadius: 'var(--r-sm)',
-                            padding: '0.28rem 0.6rem',
-                            fontSize: '0.78rem',
-                            fontWeight: 700,
+                            padding: '0.85rem 0.75rem',
+                            color: 'var(--text-faint)',
+                            fontVariantNumeric: 'tabular-nums',
+                          }}
+                        >
+                          {(page - 1) * ITEMS_PER_PAGE + i + 1}
+                        </td>
+                        <td
+                          style={{
+                            padding: '0.75rem 0.75rem',
+                            fontWeight: 600,
                             fontFamily: 'Satoshi,Inter,sans-serif',
+                            minWidth: 180,
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                            {/* Logo / initials avatar */}
+                            <CollegeLogo name={c.institute} />
+                            <div>
+                              <div>{c.institute}</div>
+                              {/* Show type tag inline on mobile */}
+                              <div style={{ display: 'none' }} className="show-mobile-inline">
+                                <span
+                                  className="tag"
+                                  style={{ marginTop: '0.25rem', display: 'inline-block' }}
+                                >
+                                  {c.instituteType}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td
+                          style={{
+                            padding: '0.85rem 0.75rem',
+                            color: 'var(--text-muted)',
+                            minWidth: 130,
+                          }}
+                        >
+                          {c.program}
+                          {c.isInterdisciplinary && (
+                            <div
+                              style={{
+                                fontSize: '0.7rem',
+                                color: 'var(--brand)',
+                                fontWeight: 700,
+                                marginTop: '0.15rem',
+                              }}
+                            >
+                              Interdisciplinary ↗
+                            </div>
+                          )}
+                          <div className="results-row-meta">
+                            {resultMeta(c, isGate)
+                              .slice(1)
+                              .map(meta => (
+                                <span key={meta}>{meta}</span>
+                              ))}
+                          </div>
+                        </td>
+                        <td className="col-hide-mobile" style={{ padding: '0.85rem 0.75rem' }}>
+                          <span className="tag">{c.instituteType}</span>
+                        </td>
+                        <td
+                          className="col-hide-mobile"
+                          style={{
+                            padding: '0.85rem 0.75rem',
+                            color: 'var(--text-muted)',
                             whiteSpace: 'nowrap',
                           }}
                         >
-                          {c.chancePercent}% {c.chance}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                  {filtered.length === 0 && (
-                    <tr>
-                      <td
-                        colSpan={8}
-                        style={{
-                          padding: '3rem 1rem',
-                          textAlign: 'center',
-                          color: 'var(--text-muted)',
-                        }}
-                      >
-                        No colleges match the selected filters.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                          {c.state}
+                        </td>
+                        <td
+                          className="col-hide-mobile"
+                          style={{ padding: '0.85rem 0.75rem', fontVariantNumeric: 'tabular-nums' }}
+                        >
+                          {isGate
+                            ? Math.min(c.openScore, c.closeScore)
+                            : c.openRank?.toLocaleString()}
+                        </td>
+                        <td
+                          style={{ padding: '0.85rem 0.75rem', fontVariantNumeric: 'tabular-nums' }}
+                        >
+                          {isGate
+                            ? Math.max(c.openScore, c.closeScore)
+                            : c.closeRank?.toLocaleString()}
+                        </td>
+                        <td style={{ padding: '0.85rem 0.75rem' }}>
+                          <span
+                            style={{
+                              background: chanceBg(c.chance),
+                              color: chanceColor(c.chance),
+                              borderRadius: 'var(--r-sm)',
+                              padding: '0.28rem 0.6rem',
+                              fontSize: '0.78rem',
+                              fontWeight: 700,
+                              fontFamily: 'Satoshi,Inter,sans-serif',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {c.chance}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+            <div className="results-mobile-list fade-up">
+              {paginated.map((c, i) => (
+                <article
+                  key={`${c.institute}-${c.program}-${i}`}
+                  className="glass result-mobile-card"
+                >
+                  <div className="result-mobile-card-head">
+                    <CollegeLogo name={c.institute} />
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div className="result-mobile-institute">{c.institute}</div>
+                      <div className="result-mobile-program">{c.program}</div>
+                    </div>
+                    <span
+                      style={{
+                        background: chanceBg(c.chance),
+                        color: chanceColor(c.chance),
+                        borderRadius: 'var(--r-sm)',
+                        padding: '0.25rem 0.55rem',
+                        fontSize: '0.72rem',
+                        fontWeight: 800,
+                        fontFamily: 'Satoshi,Inter,sans-serif',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {c.chance}
+                    </span>
+                  </div>
+                  <div className="result-mobile-metrics">
+                    <div>
+                      <span>{isGate ? 'Cutoff score' : 'Cutoff rank'}</span>
+                      <strong>{cutoffDisplay(c, isGate)}</strong>
+                    </div>
+                    <div>
+                      <span>State</span>
+                      <strong>{c.state || 'All India'}</strong>
+                    </div>
+                  </div>
+                  <div className="results-row-meta result-mobile-tags">
+                    {resultMeta(c, isGate).map(meta => (
+                      <span key={meta}>{meta}</span>
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </>
         )}
 
         {/* Pagination */}

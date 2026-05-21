@@ -8,6 +8,9 @@ import ScrollReveal from '@/components/home/ScrollReveal'
 
 export const dynamic = 'force-dynamic'
 
+const ADMISSION_YEAR = 2026
+const FALLBACK_DATA_YEAR = 2025
+
 async function getHomeStats() {
   try {
     const [countRows, instituteRows] = await Promise.all([
@@ -17,16 +20,22 @@ async function getHomeStats() {
     return {
       totalCutoffs: countRows._count.id,
       totalColleges: instituteRows.length,
-      year: 2026,
+      dataYear: countRows._max.year ?? FALLBACK_DATA_YEAR,
+      admissionYear: ADMISSION_YEAR,
     }
   } catch (error) {
     console.warn('Home stats unavailable:', error)
-    return { totalCutoffs: 0, totalColleges: 0, year: 2026 }
+    return {
+      totalCutoffs: 0,
+      totalColleges: 0,
+      dataYear: FALLBACK_DATA_YEAR,
+      admissionYear: ADMISSION_YEAR,
+    }
   }
 }
 
 export default async function Home() {
-  const { totalCutoffs, totalColleges, year } = await getHomeStats()
+  const { totalCutoffs, totalColleges, dataYear, admissionYear } = await getHomeStats()
 
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
@@ -43,8 +52,8 @@ export default async function Home() {
           letterSpacing: '0.01em',
         }}
       >
-        🎯 {year} Official Cutoffs &middot; GATE &middot; JEE Main &middot; JEE Advanced &middot;
-        Instant Predictions
+        {admissionYear} Admissions Predictor &middot; Official {dataYear} Cutoffs &middot; GATE
+        &middot; JEE Main &middot; JEE Advanced
       </div>
 
       {/* ── White sticky navbar ───────────────────── */}
@@ -174,7 +183,7 @@ export default async function Home() {
             }}
           >
             <span style={{ fontSize: '0.85rem' }}>✦</span>
-            Counselling-Accurate Predictions &middot; {year} Data
+            Counselling-Accurate Predictions &middot; Official {dataYear} Cutoff Data
           </div>
 
           {/* Hero heading with rotating text */}
@@ -203,8 +212,8 @@ export default async function Home() {
               lineHeight: 1.7,
             }}
           >
-            Enter your GATE 2026 score or JEE 2026 rank. Get an instant ranked list of IITs, NITs
-            &amp; IIITs you can realistically target.
+            Enter your GATE {admissionYear} score or JEE {admissionYear} rank. Get an instant ranked
+            list using official {dataYear} cutoff trends.
           </p>
 
           {/* ── White exam picker card with glow ──── */}
@@ -372,7 +381,7 @@ export default async function Home() {
               {
                 icon: '📋',
                 title: 'Official Cutoff Data',
-                desc: `Data sourced directly from JoSAA, CSAB, COAP and CCMT portals. ${year} final-round closing cutoffs.`,
+                desc: `Data sourced directly from JoSAA, CSAB, COAP and CCMT portals. ${dataYear} final-round closing cutoffs.`,
                 color: '#2563eb',
                 bg: '#eff6ff',
               },
@@ -864,7 +873,7 @@ export default async function Home() {
             {[
               {
                 icon: '📋',
-                t: `Official ${year} cutoffs`,
+                t: `Official ${dataYear} cutoffs`,
                 d: 'Data from JoSAA, CSAB, COAP and CCMT portals — not third-party scrapers.',
               },
               {
@@ -1012,7 +1021,7 @@ export default async function Home() {
                 >
                   {[
                     'Top 3 college matches',
-                    `Real ${year} cutoff data`,
+                    `Real ${dataYear} cutoff data`,
                     'Category & exam aware',
                   ].map(f => (
                     <li
@@ -1163,7 +1172,7 @@ export default async function Home() {
               marginBottom: '0.5rem',
             }}
           >
-            Predict Your College — 2026 Admissions
+            Predict Your College — {admissionYear} Admissions
           </h2>
           <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '1rem', marginBottom: '1.5rem' }}>
             Join thousands of students who planned their counselling with confidence.
@@ -1183,7 +1192,7 @@ export default async function Home() {
               boxShadow: '0 4px 20px -4px rgba(0,0,0,0.2)',
             }}
           >
-            Enter Your 2026 Rank — It&apos;s Free →
+            Enter Your {admissionYear} Rank — It&apos;s Free →
           </Link>
         </div>
       </section>
@@ -1244,9 +1253,9 @@ export default async function Home() {
               {
                 title: 'Data Sources',
                 links: [
-                  { l: `GATE ${year} — COAP & CCMT`, h: '#' },
-                  { l: `JEE ${year} — JoSAA & CSAB`, h: '#' },
-                  { l: 'Updated May 2026', h: '#' },
+                  { l: `GATE ${dataYear} — COAP & CCMT`, h: '#' },
+                  { l: `JEE ${dataYear} — JoSAA & CSAB`, h: '#' },
+                  { l: `${admissionYear} admissions predictor`, h: '#' },
                 ],
               },
               {

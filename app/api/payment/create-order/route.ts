@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Razorpay from 'razorpay'
-import { hasPlaceholderRazorpayKeys } from '@/lib/report-access'
+import { hasPlaceholderRazorpayKeys, reportFingerprint, ReportPayload } from '@/lib/report-access'
 import { prisma } from '@/lib/db'
+import { checkRateLimit, getClientIp, LIMITS } from '@/lib/rate-limit'
 
 function normalizeExamType(value: unknown) {
   const examType = String(value ?? '')
@@ -34,6 +35,7 @@ async function createPaymentRecord({
   razorpayOrderId,
   amount,
   currency,
+  fingerprint,
 }: {
   name: string
   email: string
@@ -42,6 +44,7 @@ async function createPaymentRecord({
   razorpayOrderId: string
   amount: number
   currency: string
+  fingerprint: string | null
 }) {
   const user = await prisma.user.upsert({
     where: { email },
@@ -57,13 +60,23 @@ async function createPaymentRecord({
       currency,
       examType,
       status: 'created',
+      // Lock the report fingerprint at order time so verify cannot be tampered with
+      reportFingerprint: fingerprint,
     },
   })
 }
 
 export async function POST(req: NextRequest) {
+  const limited = checkRateLimit(getClientIp(req.headers), LIMITS.paymentCreate)
+  if (limited) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: { 'Retry-After': String(limited.retryAfter) } }
+    )
+  }
+
   try {
-    const { examType, name, email, phone } = await req.json()
+    const { examType, name, email, phone, reportPayload } = await req.json()
     const normalizedExam = normalizeExamType(examType)
     if (!normalizedExam) {
       return NextResponse.json({ error: 'Invalid exam type' }, { status: 400 })
@@ -75,6 +88,9 @@ export async function POST(req: NextRequest) {
     const cleanName = String(name).trim()
     const cleanEmail = String(email).trim().toLowerCase()
     const cleanContact = cleanPhone(phone)
+    // Compute fingerprint from the report parameters the user is paying for.
+    // Stored now so verify cannot be swapped for a different report.
+    const fingerprint = reportPayload ? reportFingerprint(reportPayload as ReportPayload) : null
 
     const amount =
       normalizedExam === 'GATE'
@@ -95,6 +111,7 @@ export async function POST(req: NextRequest) {
         razorpayOrderId: orderId,
         amount,
         currency,
+        fingerprint,
       })
       return NextResponse.json({
         orderId,
@@ -126,6 +143,7 @@ export async function POST(req: NextRequest) {
       razorpayOrderId: order.id,
       amount: Number(order.amount ?? amount),
       currency: String(order.currency ?? currency),
+      fingerprint,
     })
 
     return NextResponse.json({

@@ -107,6 +107,13 @@ model Cutoff {
   instituteType String?
   updatedAt     DateTime @updatedAt
   createdAt     DateTime @default(now())
+
+  // Query indexes — all predict queries filter on these columns
+  @@index([examType, year, category])
+  @@index([examType, year, category, instituteType])
+  @@index([examType, year, category, source])
+  @@index([examType, year, category, paper])
+  @@index([institute])
 }
 
 model Admin {
@@ -114,4 +121,19 @@ model Admin {
   email     String   @unique
   password  String
   createdAt DateTime @default(now())
+}
+
+model Institute {
+  id           String   @id @default(cuid())
+  name         String   @unique              // full official name from Cutoff.institute
+  abbrev       String?                       // student abbreviation e.g. IITD, NITK
+  type         String?                       // IIT | NIT | IIIT | IISc | GFTI | Univ | SPA | NIELIT
+  state        String?
+  city         String?
+  branchCount  Int      @default(0)          // distinct programs in Cutoff
+  examTypes    String[] @default([])         // e.g. ["JEE_MAIN_JOSAA","JEE_ADVANCED"]
+  logoUrl      String?
+  website      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt @default(now())
 }

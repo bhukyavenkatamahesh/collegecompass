@@ -18,9 +18,12 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'CollegeCompass — GATE & JEE Rank Predictor 2026 (Official Cutoffs)',
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? 'https://collegecompass-one.vercel.app'
+  ),
+  title: 'CollegeCompass — GATE & JEE Rank Predictor 2026 (Official 2025 Cutoffs)',
   description:
-    'Enter your GATE 2026 score or JEE 2026 rank. Predict your M.Tech and B.Tech college chances using official JoSAA, CSAB, COAP and CCMT cutoffs — with category, home-state quota and gender-pool rules.',
+    'Enter your GATE 2026 score or JEE 2026 rank. Predict your M.Tech and B.Tech college chances using official 2025 JoSAA, CSAB, COAP and CCMT cutoffs — with category, home-state quota and gender-pool rules.',
   keywords: [
     'GATE college predictor',
     'JEE Main predictor',
@@ -35,7 +38,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'CollegeCompass — GATE & JEE Rank Predictor 2026',
     description:
-      'Enter your 2026 rank or score. Category, quota and gender-aware predictions for IITs, NITs, IIITs & GFTIs.',
+      'Enter your 2026 rank or score. Category, quota and gender-aware predictions using official 2025 cutoffs.',
     type: 'website',
     images: [
       {
@@ -50,7 +53,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'CollegeCompass — GATE & JEE Rank Predictor 2026',
     description:
-      'Enter your 2026 rank or score. Category, quota and gender-aware predictions for IITs, NITs, IIITs & GFTIs.',
+      'Enter your 2026 rank or score. Category, quota and gender-aware predictions using official 2025 cutoffs.',
     images: ['/og.png'],
   },
   robots: { index: true, follow: true },

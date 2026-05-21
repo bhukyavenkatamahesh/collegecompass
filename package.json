@@ -12,6 +12,9 @@
     "typecheck": "tsc --noEmit",
     "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
+    "migrate:deploy": "prisma migrate deploy",
+    "import:cutoffs": "npx ts-node --skip-project scripts/import-cutoffs.ts",
+    "db:verify": "npx ts-node --skip-project scripts/db-verify.ts",
     "test": "vitest run",
     "prepare": "husky"
   },

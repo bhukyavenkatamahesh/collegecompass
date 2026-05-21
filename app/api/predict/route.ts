@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { checkRateLimit, getClientIp, LIMITS } from '@/lib/rate-limit'
 import { prisma } from '@/lib/db'
 import { ReportPayload, verifyReportAccess } from '@/lib/report-access'
 import { expandProgramName } from '@/lib/program-names'
@@ -28,6 +29,13 @@ function positiveInteger(value: unknown): number | null {
 }
 
 export async function POST(req: NextRequest) {
+  const limited = checkRateLimit(getClientIp(req.headers), LIMITS.predict)
+  if (limited) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: { 'Retry-After': String(limited.retryAfter) } }
+    )
+  }
   try {
     const body = await req.json()
     const {
@@ -36,7 +44,7 @@ export async function POST(req: NextRequest) {
       score,
       category,
       branch, // GATE paper code (CS/EC/ME/…) or JEE branch (CS/EC/ME/…)
-      year = 2026,
+      year = 2025,
       round, // optional — if not given, use best (min closeRank / max closeScore)
       instituteTypes, // optional array: ['IIT','NIT','IIIT','GFTI']
       gender = 'Male', // JEE only: 'Male' | 'Female'
@@ -156,12 +164,14 @@ export async function POST(req: NextRequest) {
       }
       const hasFullAccess = verifyReportAccess(accessToken, reportPayload)
 
+      const gateDataYear = results.find(r => r.year)?.year ?? year
       return NextResponse.json({
         results: hasFullAccess ? results : results.slice(0, 3),
         examType,
         paper,
         score: gateScore,
         category,
+        dataYear: gateDataYear,
         totalEligiblePrograms: eligible.length,
         totalResults: results.length,
         locked: !hasFullAccess,
@@ -342,6 +352,7 @@ export async function POST(req: NextRequest) {
       }
       const hasFullAccess = verifyReportAccess(accessToken, reportPayload)
 
+      const jeeDataYear = results.find(r => r.year)?.year ?? year
       return NextResponse.json({
         results: hasFullAccess ? results : results.slice(0, 3),
         examType: jeeExam,
@@ -354,6 +365,7 @@ export async function POST(req: NextRequest) {
         gender: isFemale ? 'Female' : 'Male',
         homeState: isJeeAdv ? '' : homeState,
         branch: branchFilter || 'ALL',
+        dataYear: jeeDataYear,
         totalEligiblePrograms: filtered.length,
         totalResults: results.length,
         locked: !hasFullAccess,

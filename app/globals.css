@@ -522,6 +522,84 @@ a {
   gap: 1rem;
   margin-bottom: 2rem;
 }
+.results-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.results-meta-card {
+  padding: 0.9rem 1rem;
+  border-radius: var(--r-sm);
+}
+.results-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+}
+.results-row-meta span {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  background: var(--bg-muted);
+  font-size: 0.68rem;
+  font-weight: 650;
+  font-family: 'Satoshi', 'Inter', sans-serif;
+  padding: 0.16rem 0.48rem;
+  white-space: nowrap;
+}
+.results-mobile-list {
+  display: none !important;
+}
+.result-mobile-card {
+  border-radius: var(--r);
+  padding: 1rem;
+}
+.result-mobile-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+}
+.result-mobile-institute {
+  color: var(--text);
+  font-family: 'Satoshi', 'Inter', sans-serif;
+  font-weight: 800;
+  line-height: 1.25;
+}
+.result-mobile-program {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  margin-top: 0.18rem;
+}
+.result-mobile-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.9rem;
+}
+.result-mobile-metrics div {
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 0.65rem 0.7rem;
+}
+.result-mobile-metrics span {
+  display: block !important;
+  color: var(--text-faint);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: 'Satoshi', 'Inter', sans-serif;
+}
+.result-mobile-metrics strong {
+  display: block !important;
+  color: var(--text);
+  font-size: 0.82rem;
+  margin-top: 0.2rem;
+  font-family: 'Satoshi', 'Inter', sans-serif;
+}
 /* Hide less important table columns on small screens */
 .col-hide-mobile {
 }
@@ -529,8 +607,18 @@ a {
   .col-hide-mobile {
     display: none;
   }
+  .results-table-surface {
+    display: none !important;
+  }
+  .results-mobile-list {
+    display: grid !important;
+    gap: 0.8rem;
+  }
   .results-stats-grid {
     gap: 0.6rem;
+  }
+  .results-meta-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
