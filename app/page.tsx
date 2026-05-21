@@ -1252,10 +1252,11 @@ export default async function Home() {
               {
                 title: 'Company',
                 links: [
-                  { l: 'Dashboard', h: '/dashboard' },
-                  { l: 'Admin', h: '/admin' },
-                  { l: 'Privacy', h: '#' },
-                  { l: 'Contact', h: '#' },
+                  { l: 'Pricing', h: '/pricing' },
+                  { l: 'Privacy Policy', h: '/privacy' },
+                  { l: 'Terms & Conditions', h: '/terms' },
+                  { l: 'Refund Policy', h: '/refund' },
+                  { l: 'Contact Us', h: '/contact' },
                 ],
               },
             ].map(col => (
