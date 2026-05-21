@@ -1,0 +1,216 @@
+/* ── Animations & Interactive Components ───────────────── */
+/* Separated from globals.css to prevent Tailwind v4 tree-shaking */
+
+/* Floating orbs — slow drift */
+@keyframes floatOrb {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(12px, -18px) scale(1.03);
+  }
+  50% {
+    transform: translate(-8px, -28px) scale(0.97);
+  }
+  75% {
+    transform: translate(16px, -12px) scale(1.02);
+  }
+}
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform;
+}
+.orb-1 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.14) 0%, transparent 70%);
+  top: -100px;
+  right: -180px;
+  animation: floatOrb 18s ease-in-out infinite;
+}
+.orb-2 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.1) 0%, transparent 70%);
+  bottom: -60px;
+  left: -120px;
+  animation: floatOrb 22s ease-in-out infinite reverse;
+}
+.orb-3 {
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+  top: 40%;
+  left: 50%;
+  animation: floatOrb 15s ease-in-out infinite 3s;
+}
+
+/* Gradient shimmer — text or bg */
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+.shimmer-text {
+  background-size: 200% auto;
+  animation: shimmer 4s linear infinite;
+}
+
+/* Pulse glow on CTA */
+@keyframes pulseGlow {
+  0%,
+  100% {
+    box-shadow: 0 4px 14px -4px rgba(37, 99, 235, 0.4);
+  }
+  50% {
+    box-shadow:
+      0 4px 20px -2px rgba(37, 99, 235, 0.55),
+      0 0 40px -8px rgba(124, 58, 237, 0.2);
+  }
+}
+.cta-glow {
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
+/* Card hover lift + glow */
+.card-lift {
+  transition:
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+.card-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px -8px rgba(37, 99, 235, 0.12);
+  border-color: rgba(37, 99, 235, 0.3) !important;
+}
+
+/* Gradient border on hover */
+.card-gradient-hover {
+  position: relative;
+  transition:
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.25s ease;
+}
+.card-gradient-hover::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #2563eb, #7c3aed, #2563eb);
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.3s ease;
+}
+.card-gradient-hover:hover::before {
+  opacity: 1;
+}
+.card-gradient-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px -8px rgba(37, 99, 235, 0.15);
+}
+
+/* Marquee scroll */
+@keyframes marqueeScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+.marquee-track {
+  display: flex;
+  gap: 3rem;
+  animation: marqueeScroll 35s linear infinite;
+  will-change: transform;
+  width: max-content;
+}
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+/* Scroll reveal — elements appear on scroll via IntersectionObserver */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 {
+  transition-delay: 0.1s;
+}
+.reveal-delay-2 {
+  transition-delay: 0.2s;
+}
+.reveal-delay-3 {
+  transition-delay: 0.3s;
+}
+.reveal-delay-4 {
+  transition-delay: 0.4s;
+}
+
+/* Number counter glow */
+@keyframes countGlow {
+  0%,
+  100% {
+    text-shadow: none;
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+}
+
+/* Subtle dot pattern */
+.dot-pattern {
+  background-image: radial-gradient(rgba(148, 163, 184, 0.15) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Testimonial card quote mark */
+.quote-mark {
+  font-size: 3rem;
+  line-height: 1;
+  background: linear-gradient(135deg, #3b82f6, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-family: Georgia, serif;
+  opacity: 0.5;
+}
+
+/* Hero background grid */
+.hero-grid {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 65% at 50% 0%, #000 30%, transparent 80%);
+  mask-image: radial-gradient(ellipse 80% 65% at 50% 0%, #000 30%, transparent 80%);
+}
+
+/* Brand wordmark (footer) */
+.brand-giant {
+  font-family: 'Satoshi', 'Inter', sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 0.78;
+  font-size: clamp(5.5rem, 22vw, 20rem);
+  color: transparent;
+  background: linear-gradient(180deg, #cbd5e1 0%, #e2e8f0 45%, var(--bg) 95%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  user-select: none;
+  white-space: nowrap;
+}

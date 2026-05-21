@@ -67,8 +67,8 @@ function LoginForm() {
     >
       {/* Logo */}
       <Link href="/" className="nav-logo" style={{ marginBottom: '2rem', fontSize: '1.4rem' }}>
-        college<span>compass</span>
-        <span style={{ color: 'var(--accent)' }}>.</span>
+        college<span style={{ color: '#2563eb' }}>compass</span>
+        <span style={{ color: '#2563eb' }}>.</span>
       </Link>
 
       <div

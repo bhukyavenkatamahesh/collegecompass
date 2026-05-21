@@ -3,30 +3,34 @@
 /* ── Design Tokens ─────────────────────────────────────── */
 :root {
   /* Backgrounds */
-  --bg: #faf8f5;
+  --bg: #f8fafc;
   --bg-1: #ffffff;
   --bg-card: #ffffff;
-  --bg-muted: #f3f0eb;
+  --bg-muted: #f1f5f9;
 
   /* Borders */
-  --border: rgba(28, 27, 27, 0.1);
-  --border-strong: rgba(28, 27, 27, 0.2);
+  --border: rgba(15, 23, 42, 0.08);
+  --border-strong: rgba(15, 23, 42, 0.18);
 
   /* Brand Accent */
-  --accent: #f97316;
-  --accent-2: #ea580c;
-  --accent-bg: rgba(249, 115, 22, 0.09);
+  --accent: #2563eb;
+  --accent-2: #1d4ed8;
+  --accent-bg: rgba(37, 99, 235, 0.08);
+
+  /* Secondary accent (violet) */
+  --accent-v: #7c3aed;
+  --accent-v2: #6d28d9;
 
   /* Text */
-  --text: #111110;
-  --text-muted: #6b6b68;
-  --text-faint: #9b9b98;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --text-faint: #94a3b8;
 
   /* Gradient / shadow */
-  --gradient: linear-gradient(135deg, #f97316, #ea580c);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.07);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.14);
+  --gradient: linear-gradient(135deg, #2563eb, #7c3aed);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.1);
+  --shadow-lg: 0 16px 48px rgba(15, 23, 42, 0.14);
 
   /* Radii */
   --r-sm: 8px;
@@ -77,7 +81,7 @@ a {
 }
 
 ::selection {
-  background: rgba(249, 115, 22, 0.22);
+  background: rgba(37, 99, 235, 0.2);
 }
 
 /* ── Scrollbar ──────────────────────────────────────────── */
@@ -88,12 +92,12 @@ a {
   background: var(--bg);
 }
 ::-webkit-scrollbar-thumb {
-  background: #d8d4ce;
+  background: #cbd5e1;
   border-radius: 99px;
   border: 2px solid var(--bg);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #c0bab3;
+  background: #94a3b8;
 }
 
 /* ── Layout helpers ─────────────────────────────────────── */
@@ -130,33 +134,33 @@ a {
   background:
     radial-gradient(
       110% 80% at 0% 0%,
-      rgba(249, 115, 22, 0.38) 0%,
-      rgba(120, 55, 18, 0.18) 35%,
+      rgba(37, 99, 235, 0.3) 0%,
+      rgba(124, 58, 237, 0.15) 35%,
       transparent 65%
     ),
-    linear-gradient(150deg, #1c1108 0%, #0f0b07 55%, #090807 100%);
-  border: 1px solid rgba(249, 115, 22, 0.25);
+    linear-gradient(150deg, #0f172a 0%, #0c1220 55%, #020617 100%);
+  border: 1px solid rgba(37, 99, 235, 0.25);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-lg);
-  color: #f3ede8;
+  color: #e2e8f0;
   position: relative;
   overflow: hidden;
 }
 .card-dark .muted-d {
-  color: #b0a89f;
+  color: #94a3b8;
 }
 
 /* ── Dark Section (alternating dark/light layout) ───────── */
 .section-dark {
-  --bg: #0a0a09;
-  --bg-1: #141413;
-  --bg-card: #1a1a18;
-  --bg-muted: #141413;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.15);
-  --text: #f5f3ef;
-  --text-muted: #a8a5a0;
-  --text-faint: #6b6966;
+  --bg: #0f172a;
+  --bg-1: #1e293b;
+  --bg-card: #1e293b;
+  --bg-muted: #1e293b;
+  --border: rgba(148, 163, 184, 0.1);
+  --border-strong: rgba(148, 163, 184, 0.2);
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-faint: #64748b;
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
 
@@ -168,23 +172,23 @@ a {
   border-color: var(--border);
 }
 .section-dark .glass-hover:hover {
-  border-color: var(--border-strong);
+  border-color: rgba(37, 99, 235, 0.4);
 }
 .section-dark .nav-wrapper {
-  background: rgba(10, 10, 9, 0.85);
+  background: rgba(15, 23, 42, 0.85);
 }
 .section-dark .tag {
-  background: #1f1f1d;
-  border-color: rgba(255, 255, 255, 0.1);
+  background: #1e293b;
+  border-color: rgba(148, 163, 184, 0.15);
   color: var(--text-muted);
 }
 .section-dark .btn-primary {
   background: #fff;
-  color: #0a0a09;
+  color: #0f172a;
   border-color: #fff;
 }
 .section-dark .btn-primary:hover {
-  background: #e8e5e0;
+  background: #e2e8f0;
 }
 .section-dark .btn-ghost {
   border-color: rgba(255, 255, 255, 0.2);
@@ -195,18 +199,18 @@ a {
   border-color: rgba(255, 255, 255, 0.3);
 }
 .section-dark .input-field {
-  background: #141413;
-  border-color: rgba(255, 255, 255, 0.15);
+  background: #1e293b;
+  border-color: rgba(148, 163, 184, 0.2);
   color: var(--text);
 }
 .section-dark .input-field:focus {
   border-color: var(--accent);
 }
 .section-dark .input-field::placeholder {
-  color: #5a5856;
+  color: #475569;
 }
 .section-dark .gradient-text {
-  background: linear-gradient(135deg, #f97316, #fbbf24);
+  background: linear-gradient(135deg, #3b82f6, #a78bfa);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -222,11 +226,11 @@ a {
   background-clip: text;
 }
 .section-dark ::-webkit-scrollbar-track {
-  background: #0a0a09;
+  background: #0f172a;
 }
 .section-dark ::-webkit-scrollbar-thumb {
-  background: #2a2928;
-  border-color: #0a0a09;
+  background: #334155;
+  border-color: #0f172a;
 }
 
 /* ── Navbar ─────────────────────────────────────────────── */
@@ -244,7 +248,7 @@ a {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(250, 248, 245, 0.85);
+  background: rgba(248, 250, 252, 0.85);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--border);
@@ -310,13 +314,13 @@ a {
 }
 
 .btn-accent {
-  background: var(--accent);
+  background: var(--gradient);
   color: #fff;
   padding: 0.72rem 1.65rem;
-  box-shadow: 0 4px 18px -6px rgba(249, 115, 22, 0.5);
+  box-shadow: 0 4px 18px -6px rgba(37, 99, 235, 0.45);
 }
 .btn-accent:hover {
-  background: var(--accent-2);
+  filter: brightness(1.1);
   transform: translateY(-2px);
 }
 
@@ -354,7 +358,7 @@ a {
 }
 .input-field:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 .input-field::placeholder {
   color: var(--text-faint);
@@ -373,8 +377,8 @@ a {
   align-items: center;
   gap: 0.4rem;
   background: var(--accent-bg);
-  border: 1px solid rgba(249, 115, 22, 0.25);
-  color: var(--accent-2);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  color: var(--accent);
   border-radius: 99px;
   padding: 0.3rem 0.9rem;
   font-size: 0.8rem;
@@ -569,7 +573,7 @@ a {
 @keyframes fadeUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(24px);
   }
   to {
     opacity: 1;
@@ -577,22 +581,25 @@ a {
   }
 }
 .fade-up {
-  animation: fadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: fadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .fade-up-1 {
-  animation-delay: 0.05s;
+  animation-delay: 0.08s;
 }
 .fade-up-2 {
-  animation-delay: 0.12s;
+  animation-delay: 0.16s;
 }
 .fade-up-3 {
-  animation-delay: 0.19s;
+  animation-delay: 0.24s;
 }
 .fade-up-4 {
-  animation-delay: 0.26s;
+  animation-delay: 0.32s;
 }
 .fade-up-5 {
-  animation-delay: 0.33s;
+  animation-delay: 0.4s;
+}
+.fade-up-6 {
+  animation-delay: 0.48s;
 }
 
 @keyframes float {
@@ -605,30 +612,7 @@ a {
   }
 }
 
-/* ── Hero background grid ───────────────────────────────── */
-.hero-grid {
-  background-image:
-    linear-gradient(rgba(28, 27, 27, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(28, 27, 27, 0.04) 1px, transparent 1px);
-  background-size: 48px 48px;
-  -webkit-mask-image: radial-gradient(ellipse 80% 65% at 50% 0%, #000 30%, transparent 80%);
-  mask-image: radial-gradient(ellipse 80% 65% at 50% 0%, #000 30%, transparent 80%);
-}
-
-/* ── Brand wordmark (footer) ────────────────────────────── */
-.brand-giant {
-  font-family: 'Satoshi', 'Inter', sans-serif;
-  font-weight: 900;
-  letter-spacing: -0.05em;
-  line-height: 0.78;
-  font-size: clamp(5.5rem, 22vw, 20rem);
-  color: transparent;
-  background: linear-gradient(180deg, #e5ddd2 0%, #ede5da 45%, var(--bg) 95%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  user-select: none;
-  white-space: nowrap;
-}
+/* ── Animation & interactive component styles in animations.css ─── */
 
 /* ── Chance badges ──────────────────────────────────────── */
 .chance-high {
@@ -651,7 +635,14 @@ a {
   display: none;
 }
 
-/* Footer columns responsive */
+/* Footer 4-col grid (home page) */
+.footer-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+}
+
+/* Footer columns responsive (predict/other pages) */
 .footer-columns {
   display: flex;
   justify-content: space-between;
@@ -682,6 +673,12 @@ a {
   }
   .footer-columns {
     gap: 1.2rem;
+  }
+  .footer-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .footer-brand {
+    grid-column: span 2 !important;
   }
 }
 
@@ -766,6 +763,12 @@ a {
   .footer-columns {
     flex-direction: column;
     gap: 1.5rem;
+  }
+  .footer-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .footer-brand {
+    grid-column: span 1 !important;
   }
 
   /* Results stats grid: 1 row with smaller cards */

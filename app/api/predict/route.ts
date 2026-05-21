@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       score,
       category,
       branch, // GATE paper code (CS/EC/ME/…) or JEE branch (CS/EC/ME/…)
-      year = 2025,
+      year = 2026,
       round, // optional — if not given, use best (min closeRank / max closeScore)
       instituteTypes, // optional array: ['IIT','NIT','IIIT','GFTI']
       gender = 'Male', // JEE only: 'Male' | 'Female'

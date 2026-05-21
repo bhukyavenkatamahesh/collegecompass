@@ -43,12 +43,12 @@ const EXAM_EMOJI: Record<string, string> = {
   JEE_ADVANCED: '🏆',
 }
 
-// All badge colours use the design-system palette (orange / green / amber)
+// Badge colours — blue/violet palette
 const EXAM_COLORS: Record<string, { bg: string; color: string }> = {
-  GATE: { bg: 'var(--accent-bg)', color: 'var(--accent-2)' },
+  GATE: { bg: 'var(--accent-bg)', color: 'var(--accent)' },
   JEE_MAIN_JOSAA: { bg: 'rgba(16,185,129,0.10)', color: '#059669' },
   JEE_MAIN_CSAB: { bg: 'rgba(20,184,166,0.10)', color: '#0d9488' },
-  JEE_ADVANCED: { bg: 'rgba(245,158,11,0.12)', color: '#b45309' },
+  JEE_ADVANCED: { bg: 'rgba(124,58,237,0.10)', color: '#7c3aed' },
 }
 
 const BRANCH_NAMES: Record<string, string> = {
@@ -207,8 +207,8 @@ export default function DashboardPage() {
       <div className="nav-wrapper">
         <nav className="nav">
           <Link href="/" className="nav-logo">
-            college<span>compass</span>
-            <span style={{ color: 'var(--accent)' }}>.</span>
+            college<span style={{ color: '#2563eb' }}>compass</span>
+            <span style={{ color: '#2563eb' }}>.</span>
           </Link>
 
           {/* Centre: page title */}

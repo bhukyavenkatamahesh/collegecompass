@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { NavAuth } from '@/components/nav-auth'
+import { getCollegeLogo, getInstituteInitials } from '@/lib/college-logos'
 
 interface College {
   institute: string
@@ -57,6 +58,62 @@ const BRANCH_MAP: Record<string, string> = {
   DA: 'Data Science & AI',
   MATH: 'Mathematics / Computing',
   PHYSICS: 'Physics',
+}
+
+/** CollegeLogo — shows official logo if found, else colored initials avatar */
+function CollegeLogo({ name }: { name: string }) {
+  const logoUrl = getCollegeLogo(name)
+  if (logoUrl) {
+    return (
+      <img
+        src={logoUrl}
+        alt={name}
+        style={{
+          width: 34,
+          height: 34,
+          objectFit: 'contain',
+          borderRadius: 6,
+          background: '#fff',
+          border: '1px solid var(--border)',
+          flexShrink: 0,
+          padding: 2,
+        }}
+        onError={e => {
+          // Fallback to initials on broken image
+          const target = e.currentTarget
+          const { initials, bg } = getInstituteInitials(name)
+          target.replaceWith(
+            Object.assign(document.createElement('div'), {
+              textContent: initials,
+              style: `width:34px;height:34px;border-radius:6px;background:${bg};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:800;flex-shrink:0;font-family:Satoshi,Inter,sans-serif;letter-spacing:-0.02em`,
+            })
+          )
+        }}
+      />
+    )
+  }
+  const { initials, bg } = getInstituteInitials(name)
+  return (
+    <div
+      style={{
+        width: 34,
+        height: 34,
+        borderRadius: 6,
+        background: bg,
+        color: '#fff',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '0.72rem',
+        fontWeight: 800,
+        flexShrink: 0,
+        fontFamily: 'Satoshi,Inter,sans-serif',
+        letterSpacing: '-0.02em',
+      }}
+    >
+      {initials}
+    </div>
+  )
 }
 
 function chanceColor(c: string) {
@@ -175,7 +232,7 @@ function ResultsContent() {
       // Brand Logo
       doc.setFontSize(22)
       doc.setFont('helvetica', 'bold')
-      doc.setTextColor(249, 115, 22) // Orange accent
+      doc.setTextColor(37, 99, 235) // Blue accent
       doc.text('collegecompass.', 14, 18)
 
       // Report Title
@@ -288,8 +345,8 @@ function ResultsContent() {
       <div className="nav-wrapper">
         <nav className="nav">
           <Link href="/" className="nav-logo">
-            college<span>compass</span>
-            <span style={{ color: 'var(--accent)' }}>.</span>
+            college<span style={{ color: '#2563eb' }}>compass</span>
+            <span style={{ color: '#2563eb' }}>.</span>
           </Link>
           <div
             className="hide-sm"
@@ -572,22 +629,27 @@ function ResultsContent() {
                       </td>
                       <td
                         style={{
-                          padding: '0.85rem 0.75rem',
+                          padding: '0.75rem 0.75rem',
                           fontWeight: 600,
                           fontFamily: 'Satoshi,Inter,sans-serif',
-                          minWidth: 140,
+                          minWidth: 180,
                         }}
                       >
-                        {c.institute}
-                        <div className="col-hide-mobile" style={{ display: 'none' }} />
-                        {/* Show type tag inline on mobile */}
-                        <div style={{ display: 'none' }} className="show-mobile-inline">
-                          <span
-                            className="tag"
-                            style={{ marginTop: '0.25rem', display: 'inline-block' }}
-                          >
-                            {c.instituteType}
-                          </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                          {/* Logo / initials avatar */}
+                          <CollegeLogo name={c.institute} />
+                          <div>
+                            <div>{c.institute}</div>
+                            {/* Show type tag inline on mobile */}
+                            <div style={{ display: 'none' }} className="show-mobile-inline">
+                              <span
+                                className="tag"
+                                style={{ marginTop: '0.25rem', display: 'inline-block' }}
+                              >
+                                {c.instituteType}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </td>
                       <td

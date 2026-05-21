@@ -160,30 +160,30 @@ const L = {
 } as const
 
 function PredictFooter() {
-  const year = 2025
+  const year = 2026
   return (
-    <footer style={{ background: '#0a0a09', color: '#f5f3ef', padding: '2.5rem 0 1.2rem' }}>
+    <footer style={{ background: '#0f172a', color: '#f1f5f9', padding: '2.5rem 0 1.2rem' }}>
       <div className="container">
         <div
           className="footer-columns"
           style={{
             paddingBottom: '1.5rem',
-            borderBottom: '1px solid rgba(255,255,255,0.08)',
+            borderBottom: '1px solid rgba(148,163,184,0.1)',
           }}
         >
           <div style={{ maxWidth: 380 }}>
-            <div className="nav-logo" style={{ marginBottom: '0.55rem', color: '#f5f3ef' }}>
-              college<span style={{ color: 'var(--accent)' }}>compass</span>.
+            <div className="nav-logo" style={{ marginBottom: '0.55rem', color: '#f1f5f9' }}>
+              college<span style={{ color: '#60a5fa' }}>compass</span>.
             </div>
-            <p style={{ color: '#a8a5a0', fontSize: '0.83rem', lineHeight: 1.65 }}>
+            <p style={{ color: '#94a3b8', fontSize: '0.83rem', lineHeight: 1.65 }}>
               Independent predictions using official cutoff data. Not affiliated with JoSAA, CSAB,
               IIT, NIT, CCMT, COAP, GATE or JEE authorities.
             </p>
           </div>
-          <div style={{ fontSize: '0.82rem', lineHeight: 2, color: '#a8a5a0' }}>
+          <div style={{ fontSize: '0.82rem', lineHeight: 2, color: '#94a3b8' }}>
             <div
               style={{
-                color: '#f5f3ef',
+                color: '#f1f5f9',
                 fontWeight: 700,
                 marginBottom: '0.2rem',
                 fontFamily: 'Satoshi,Inter,sans-serif',
@@ -195,10 +195,10 @@ function PredictFooter() {
             <div>JEE {year}: JoSAA and CSAB</div>
             <div>Updated May 2026</div>
           </div>
-          <div style={{ fontSize: '0.82rem', lineHeight: 2, color: '#a8a5a0' }}>
+          <div style={{ fontSize: '0.82rem', lineHeight: 2, color: '#94a3b8' }}>
             <div
               style={{
-                color: '#f5f3ef',
+                color: '#f1f5f9',
                 fontWeight: 700,
                 marginBottom: '0.2rem',
                 fontFamily: 'Satoshi,Inter,sans-serif',
@@ -207,23 +207,23 @@ function PredictFooter() {
               Predictors
             </div>
             <div>
-              <Link href="/predict?exam=GATE" style={{ color: '#a8a5a0' }}>
-                GATE Predictor
+              <Link href="/predict?exam=GATE" style={{ color: '#94a3b8' }}>
+                GATE Predictor 2026
               </Link>
             </div>
             <div>
-              <Link href="/predict?exam=JEE_MAIN&counselling=JOSAA" style={{ color: '#a8a5a0' }}>
-                JoSAA Predictor
+              <Link href="/predict?exam=JEE_MAIN&counselling=JOSAA" style={{ color: '#94a3b8' }}>
+                JoSAA Predictor 2026
               </Link>
             </div>
             <div>
-              <Link href="/predict?exam=JEE_MAIN&counselling=CSAB" style={{ color: '#a8a5a0' }}>
-                CSAB Predictor
+              <Link href="/predict?exam=JEE_MAIN&counselling=CSAB" style={{ color: '#94a3b8' }}>
+                CSAB Predictor 2026
               </Link>
             </div>
           </div>
         </div>
-        <div style={{ fontSize: '0.77rem', color: '#6b6966', lineHeight: 1.6, paddingTop: '1rem' }}>
+        <div style={{ fontSize: '0.77rem', color: '#64748b', lineHeight: 1.6, paddingTop: '1rem' }}>
           © {new Date().getFullYear()} CollegeCompass. Predictions are indicative. Always verify on
           the official counselling portal before making decisions.
         </div>
@@ -324,7 +324,7 @@ function PredictForm() {
 
   async function handlePreview() {
     if (isGate && !validPositiveNumber(form.rank)) {
-      setError('Enter a valid GATE score (1–1000)')
+      setError('Enter your GATE 2026 score (1–1000)')
       return
     }
     if (isGate && Number(form.rank) > 1000) {
@@ -530,8 +530,8 @@ function PredictForm() {
       <div className="nav-wrapper">
         <nav className="nav">
           <Link href="/" className="nav-logo">
-            college<span>compass</span>
-            <span style={{ color: 'var(--accent)' }}>.</span>
+            college<span style={{ color: '#2563eb' }}>compass</span>
+            <span style={{ color: '#2563eb' }}>.</span>
           </Link>
           <div
             style={{
@@ -542,12 +542,12 @@ function PredictForm() {
             }}
           >
             {isGate
-              ? 'GATE Predictor'
+              ? 'GATE Predictor 2026'
               : isAdvanced
-                ? 'JEE Advanced Predictor'
+                ? 'JEE Advanced Predictor 2026'
                 : isCsab
-                  ? 'CSAB Predictor'
-                  : 'JoSAA Predictor'}
+                  ? 'CSAB Predictor 2026'
+                  : 'JoSAA Predictor 2026'}
           </div>
           <NavAuth />
         </nav>
@@ -584,12 +584,12 @@ function PredictForm() {
           >
             {step === 1
               ? isGate
-                ? 'We match your GATE score against every CCMT & COAP cutoff — category and paper eligibility applied.'
+                ? 'Enter your GATE 2026 score. We match it against every CCMT & COAP cutoff — category and paper eligibility applied.'
                 : isAdvanced
-                  ? 'We match your JEE Advanced rank against every IIT cutoff — category, gender pool, all applied.'
+                  ? 'Enter your JEE Advanced 2026 rank. We match it against every IIT cutoff — category, gender pool, all applied.'
                   : isCsab
-                    ? 'CSAB fills vacant NIT/IIIT/GFTI seats after JoSAA. We match your CRL against every CSAB special-round cutoff.'
-                    : 'We match your JEE Main rank against every JoSAA NIT/IIIT/GFTI cutoff — category, gender pool, home-state quota all applied.'
+                    ? 'Enter your JEE Main 2026 rank. CSAB fills vacant NIT/IIIT/GFTI seats after JoSAA — we match your CRL against every CSAB special-round cutoff.'
+                    : 'Enter your JEE Main 2026 rank. We match it against every JoSAA NIT/IIIT/GFTI cutoff — category, gender pool, home-state quota all applied.'
               : 'Your top 3 matches are shown free. Unlock the complete list with PDF download for just ₹49 — one-time.'}
           </p>
           {/* Progress */}
@@ -643,12 +643,12 @@ function PredictForm() {
             </div>
             {[
               isGate
-                ? '✓  Official 2025 CCMT · COAP cutoff data'
+                ? '✓  Official 2026 CCMT · COAP cutoff data'
                 : isAdvanced
-                  ? '✓  Official 2025 JoSAA IIT cutoff data'
+                  ? '✓  Official 2026 JoSAA IIT cutoff data'
                   : isCsab
-                    ? '✓  Official 2025 CSAB special round data'
-                    : '✓  Official 2025 JoSAA cutoff data',
+                    ? '✓  Official 2026 CSAB special round data'
+                    : '✓  Official 2026 JoSAA cutoff data',
               '✓  Last-round cutoffs — most accurate threshold',
               '✓  Secure Razorpay payment · no account needed',
             ].map(t => (
@@ -736,7 +736,7 @@ function PredictForm() {
                   <>
                     {/* Score */}
                     <div>
-                      <label style={L}>GATE Score</label>
+                      <label style={L}>GATE 2026 Score</label>
                       <input
                         type="number"
                         className="input-field"
@@ -1039,10 +1039,10 @@ function PredictForm() {
                   }}
                 >
                   {loading
-                    ? 'Analyzing cutoffs…'
+                    ? 'Analyzing 2026 cutoffs…'
                     : isGate
-                      ? 'See College Predictions →'
-                      : 'Predict'}
+                      ? 'Predict My Colleges 2026 →'
+                      : 'Predict My Colleges 2026 →'}
                 </button>
               </div>
             )}
@@ -1223,7 +1223,7 @@ function PredictForm() {
                   <div
                     style={{
                       background: 'var(--accent-bg)',
-                      border: '1px solid rgba(249,115,22,0.2)',
+                      border: '1px solid rgba(37,99,235,0.15)',
                       borderRadius: 'var(--r-sm)',
                       padding: '0.7rem 1rem',
                       display: 'flex',

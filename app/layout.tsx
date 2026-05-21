@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import Script from 'next/script'
 import { SessionProvider } from '@/components/session-provider'
 import './globals.css'
+import './animations.css'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -11,20 +12,20 @@ const inter = Inter({
 })
 
 export const viewport: Viewport = {
-  themeColor: '#faf8f5',
+  themeColor: '#f8fafc',
   width: 'device-width',
   initialScale: 1,
 }
 
 export const metadata: Metadata = {
-  title: 'CollegeCompass — GATE & JEE College Predictor (Official 2025 Cutoffs)',
+  title: 'CollegeCompass — GATE & JEE Rank Predictor 2026 (Official Cutoffs)',
   description:
-    'Predict your M.Tech (GATE) and B.Tech (JEE Main/Advanced) college chances using official 2025 JoSAA, CSAB, COAP and CCMT cutoffs — with category, home-state quota and gender-pool rules.',
+    'Enter your GATE 2026 score or JEE 2026 rank. Predict your M.Tech and B.Tech college chances using official JoSAA, CSAB, COAP and CCMT cutoffs — with category, home-state quota and gender-pool rules.',
   keywords: [
     'GATE college predictor',
     'JEE Main predictor',
     'JEE Advanced',
-    'JoSAA 2025',
+    'JoSAA 2026',
     'CSAB',
     'COAP',
     'CCMT',
@@ -32,9 +33,9 @@ export const metadata: Metadata = {
     'IIT M.Tech',
   ],
   openGraph: {
-    title: 'CollegeCompass — GATE & JEE College Predictor',
+    title: 'CollegeCompass — GATE & JEE Rank Predictor 2026',
     description:
-      'Real 2025 cutoff data. Category, quota and gender-aware predictions for IITs, NITs, IIITs & GFTIs.',
+      'Enter your 2026 rank or score. Category, quota and gender-aware predictions for IITs, NITs, IIITs & GFTIs.',
     type: 'website',
   },
   robots: { index: true, follow: true },
@@ -42,7 +43,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.className}>
+    <html lang="en" className={inter.className} data-scroll-behavior="smooth">
       <body>
         <SessionProvider>{children}</SessionProvider>
         <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />

@@ -5,9 +5,9 @@ import Link from 'next/link'
 export function NavAuth({ dark = false }: { dark?: boolean }) {
   const { data: session, status } = useSession()
 
-  const mutedColor = dark ? '#a8a5a0' : 'var(--text-muted)'
-  const textColor = dark ? '#f5f3ef' : 'var(--text)'
-  const borderColor = dark ? 'rgba(255,255,255,0.18)' : 'var(--border-strong)'
+  const mutedColor = dark ? '#94a3b8' : 'var(--text-muted)'
+  const textColor = dark ? '#f1f5f9' : 'var(--text)'
+  const borderColor = dark ? 'rgba(148,163,184,0.2)' : 'var(--border-strong)'
 
   if (status === 'loading') {
     return (
@@ -138,10 +138,10 @@ export function NavAuth({ dark = false }: { dark?: boolean }) {
         className="btn btn-sm"
         style={{
           fontSize: '0.8rem',
-          color: dark ? '#0a0a09' : '#fff',
+          color: dark ? '#0f172a' : '#fff',
           background: dark ? '#ffffff' : 'var(--accent)',
           border: 'none',
-          boxShadow: dark ? 'none' : '0 2px 8px -2px rgba(249,115,22,0.45)',
+          boxShadow: dark ? 'none' : '0 2px 8px -2px rgba(37,99,235,0.4)',
           whiteSpace: 'nowrap',
         }}
       >
