@@ -693,7 +693,10 @@ function PredictForm() {
             }}
           >
             {step === 1 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div
+                className="predict-fields"
+                style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
+              >
                 {/* Exam selector */}
                 <div>
                   <label style={L}>Exam</label>
