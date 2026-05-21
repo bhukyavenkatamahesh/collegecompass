@@ -37,6 +37,21 @@ export const metadata: Metadata = {
     description:
       'Enter your 2026 rank or score. Category, quota and gender-aware predictions for IITs, NITs, IIITs & GFTIs.',
     type: 'website',
+    images: [
+      {
+        url: '/og.png',
+        width: 1200,
+        height: 630,
+        alt: 'CollegeCompass — GATE & JEE Rank Predictor 2026',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'CollegeCompass — GATE & JEE Rank Predictor 2026',
+    description:
+      'Enter your 2026 rank or score. Category, quota and gender-aware predictions for IITs, NITs, IIITs & GFTIs.',
+    images: ['/og.png'],
   },
   robots: { index: true, follow: true },
 }
