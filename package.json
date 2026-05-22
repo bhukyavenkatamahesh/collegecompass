@@ -11,10 +11,9 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "postinstall": "prisma generate",
-    "prisma:generate": "prisma generate",
     "migrate:deploy": "prisma migrate deploy",
-    "import:cutoffs": "npx ts-node --skip-project scripts/import-cutoffs.ts",
-    "db:verify": "npx ts-node --skip-project scripts/db-verify.ts",
+    "prisma:generate": "prisma generate",
+    "db:seed": "tsx prisma/seed.ts",
     "test": "vitest run",
     "prepare": "husky"
   },
