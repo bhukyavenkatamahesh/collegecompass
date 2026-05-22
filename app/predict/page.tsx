@@ -447,7 +447,18 @@ function PredictForm() {
         )
         return
       }
-      setStep(2)
+      // Free access: skip payment step, go straight to results
+      const params = new URLSearchParams({
+        exam: form.exam,
+        rank: activeRank,
+        category: form.category,
+        branch: form.branch,
+        gender: form.gender,
+        homeState: isAdvanced ? '' : form.homeState,
+        crl: isCsab ? activeRank : form.crl,
+        counselling: form.counselling,
+      })
+      router.push(`/results?${params.toString()}`)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong')
     }

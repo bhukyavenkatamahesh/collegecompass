@@ -226,7 +226,7 @@ function ResultsContent() {
   const crl = p.get('crl') || ''
   const counselling = p.get('counselling') || ''
   const accessToken = p.get('accessToken') || ''
-  const paid = Boolean(accessToken)
+  const paid = true // free access this year
 
   const isGate = exam === 'GATE'
   const isCsab = counselling === 'CSAB'

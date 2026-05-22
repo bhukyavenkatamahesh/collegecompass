@@ -58,6 +58,8 @@ export function verifyReportAccess(token: unknown, payload: ReportPayload) {
   return data.role === 'paid_report' && data.reportFingerprint === reportFingerprint(payload)
 }
 
+export const FREE_ACCESS = process.env.FREE_ACCESS === 'true'
+
 export function hasPlaceholderRazorpayKeys() {
   const keyId = process.env.RAZORPAY_KEY_ID || ''
   const secret = process.env.RAZORPAY_KEY_SECRET || ''

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { checkRateLimit, getClientIp, LIMITS } from '@/lib/rate-limit'
 import { prisma } from '@/lib/db'
-import { ReportPayload, verifyReportAccess } from '@/lib/report-access'
+import { ReportPayload, verifyReportAccess, FREE_ACCESS } from '@/lib/report-access'
 import { expandProgramName } from '@/lib/program-names'
 import { resolveInstituteState } from '@/lib/institute-state'
 import {
@@ -162,7 +162,7 @@ export async function POST(req: NextRequest) {
         category,
         branch: paper,
       }
-      const hasFullAccess = verifyReportAccess(accessToken, reportPayload)
+      const hasFullAccess = FREE_ACCESS || verifyReportAccess(accessToken, reportPayload)
 
       const gateDataYear = results.find(r => r.year)?.year ?? year
       return NextResponse.json({
@@ -350,7 +350,7 @@ export async function POST(req: NextRequest) {
         homeState: isJeeAdv ? '' : homeState,
         branch: branchFilter || 'ALL',
       }
-      const hasFullAccess = verifyReportAccess(accessToken, reportPayload)
+      const hasFullAccess = FREE_ACCESS || verifyReportAccess(accessToken, reportPayload)
 
       const jeeDataYear = results.find(r => r.year)?.year ?? year
       return NextResponse.json({

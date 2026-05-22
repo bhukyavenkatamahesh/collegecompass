@@ -320,7 +320,7 @@ export default async function Home() {
                 flexWrap: 'wrap',
               }}
             >
-              {['Official cutoffs', 'Free preview', 'PDF download', 'No signup'].map(t => (
+              {['Official cutoffs', 'Full list free', 'PDF download', 'No signup'].map(t => (
                 <span
                   key={t}
                   style={{
@@ -345,7 +345,7 @@ export default async function Home() {
                 { value: `${totalCutoffs}`, label: 'Cutoff Data Points', suffix: '+' },
                 { value: `${totalColleges}`, label: 'Institutes Tracked', suffix: '+' },
                 { value: '9', label: 'Categories Supported', suffix: '+' },
-                { value: '49', label: 'One-time Unlock', prefix: '₹' },
+                { value: '0', label: 'Cost — Fully Free', prefix: '₹' },
               ]}
             />
           </div>
@@ -395,7 +395,7 @@ export default async function Home() {
               {
                 icon: '⚡',
                 title: 'Instant Results',
-                desc: 'No account required. Enter details and see matches within seconds — preview free, full list ₹49.',
+                desc: 'No account required. Enter details and see your full ranked college list within seconds — completely free.',
                 color: '#059669',
                 bg: '#ecfdf5',
               },
@@ -655,7 +655,7 @@ export default async function Home() {
                 fontSize: '1rem',
               }}
             >
-              Four steps to counselling confidence.
+              Three steps to counselling confidence.
             </p>
           </ScrollReveal>
 
@@ -669,20 +669,14 @@ export default async function Home() {
               },
               {
                 n: '02',
-                t: 'Free preview',
-                d: 'Instantly see your top 3 college matches — no payment required.',
-                icon: '👁️',
+                t: 'Get full results',
+                d: 'Instantly see your complete ranked college list with chance % — 100% free, no payment.',
+                icon: '🎯',
               },
               {
                 n: '03',
-                t: 'Unlock ₹49',
-                d: 'One-time payment via Razorpay. No account, no subscription.',
-                icon: '🔓',
-              },
-              {
-                n: '04',
                 t: 'Download PDF',
-                d: 'Filter, sort and export your full ranked list as a PDF.',
+                d: 'Filter, sort and export your full ranked list as a PDF for offline counselling.',
                 icon: '📄',
               },
             ].map((x, i) => (
@@ -961,140 +955,63 @@ export default async function Home() {
                 Stop guessing your colleges.
               </h2>
               <p style={{ marginTop: '0.6rem', fontSize: '1rem', color: '#64748b' }}>
-                See a free preview, then unlock everything.
+                Everything is free this year. No payment, no signup.
               </p>
             </div>
           </ScrollReveal>
 
-          <div
-            className="grid-2"
-            style={{ alignItems: 'stretch', gap: '1.2rem', maxWidth: 760, margin: '0 auto' }}
-          >
+          <div style={{ maxWidth: 540, margin: '0 auto' }}>
             <ScrollReveal delay={1}>
               <div
-                className="card-lift"
-                style={{
-                  borderRadius: 20,
-                  padding: '2rem',
-                  background: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  height: '100%',
-                }}
+                className="card-dark"
+                style={{ padding: '2.5rem', borderRadius: 24, textAlign: 'center' }}
               >
-                <div
-                  style={{
-                    fontFamily: 'Satoshi,Inter,sans-serif',
-                    fontWeight: 800,
-                    fontSize: '0.95rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.45rem',
-                    marginBottom: '1rem',
-                    color: '#0f172a',
-                  }}
-                >
-                  ✦ Free Preview
-                </div>
-                <div
-                  style={{
-                    fontFamily: 'Satoshi,Inter,sans-serif',
-                    fontWeight: 900,
-                    fontSize: '2.2rem',
-                    letterSpacing: '-0.05em',
-                    marginBottom: '0.3rem',
-                    color: '#0f172a',
-                  }}
-                >
-                  ₹0
-                </div>
-                <p style={{ color: '#64748b', fontSize: '0.82rem', marginBottom: '1.4rem' }}>
-                  No credit card. No signup.
-                </p>
-                <ul
-                  style={{
-                    listStyle: 'none',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.65rem',
-                    marginBottom: '1.8rem',
-                  }}
-                >
-                  {[
-                    'Top 3 college matches',
-                    `Real ${dataYear} cutoff data`,
-                    'Category & exam aware',
-                  ].map(f => (
-                    <li
-                      key={f}
-                      style={{
-                        display: 'flex',
-                        gap: '0.5rem',
-                        color: '#64748b',
-                        fontSize: '0.85rem',
-                      }}
-                    >
-                      <span style={{ color: '#2563eb' }}>✓</span>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="/predict"
-                  className="btn btn-ghost btn-sm"
-                  style={{ width: '100%', borderRadius: 12 }}
-                >
-                  Try it free →
-                </Link>
-              </div>
-            </ScrollReveal>
-
-            <ScrollReveal delay={2}>
-              <div className="card-dark" style={{ padding: '2rem', height: '100%' }}>
                 <span
                   style={{
                     display: 'inline-flex',
-                    background: '#2563eb',
+                    background: '#16a34a',
                     color: '#fff',
                     fontFamily: 'Satoshi,Inter,sans-serif',
                     fontWeight: 700,
                     borderRadius: 99,
-                    padding: '0.2rem 0.65rem',
-                    fontSize: '0.72rem',
+                    padding: '0.25rem 0.9rem',
+                    fontSize: '0.75rem',
+                    marginBottom: '1.2rem',
                   }}
                 >
-                  Most Popular
+                  🎉 Free for 2025 Season
                 </span>
                 <div
                   style={{
-                    margin: '1rem 0 0.2rem',
                     fontFamily: 'Satoshi,Inter,sans-serif',
                     fontWeight: 900,
-                    fontSize: '2.6rem',
+                    fontSize: '3.5rem',
                     letterSpacing: '-0.05em',
                     color: '#fff',
+                    lineHeight: 1,
+                    marginBottom: '0.4rem',
                   }}
                 >
-                  ₹49{' '}
-                  <span style={{ fontSize: '0.85rem', fontWeight: 500, color: '#94a3b8' }}>
-                    one-time
-                  </span>
+                  ₹0
                 </div>
-                <p style={{ color: '#94a3b8', fontSize: '0.82rem', marginBottom: '1.4rem' }}>
-                  Everything you need for counselling confidence.
+                <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.8rem' }}>
+                  No credit card. No signup. No catch.
                 </p>
                 <ul
                   style={{
                     listStyle: 'none',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '0.65rem',
-                    marginBottom: '1.8rem',
+                    gap: '0.75rem',
+                    marginBottom: '2rem',
+                    textAlign: 'left',
                   }}
                 >
                   {[
-                    'Full ranked list with chance %',
-                    'Home-state, gender & quota aware',
-                    'JoSAA + CSAB + COAP + CCMT',
+                    'Full ranked college list with chance %',
+                    `Real ${dataYear} cutoff data (JoSAA, CSAB, COAP, CCMT)`,
+                    'Home-state, gender & quota filters',
+                    'All 9 reservation categories',
                     'Downloadable PDF report',
                     'Instant — no account needed',
                   ].map(f => (
@@ -1103,11 +1020,11 @@ export default async function Home() {
                       style={{
                         display: 'flex',
                         gap: '0.5rem',
-                        fontSize: '0.85rem',
+                        fontSize: '0.87rem',
                         color: '#e2e8f0',
                       }}
                     >
-                      <span style={{ color: '#60a5fa' }}>✓</span>
+                      <span style={{ color: '#4ade80', flexShrink: 0 }}>✓</span>
                       {f}
                     </li>
                   ))}
@@ -1120,22 +1037,13 @@ export default async function Home() {
                     borderRadius: 12,
                     background: 'linear-gradient(135deg,#2563eb,#7c3aed)',
                     color: '#fff',
-                    padding: '0.75rem 1rem',
+                    padding: '0.85rem 1rem',
                     border: 'none',
+                    fontSize: '1rem',
                   }}
                 >
-                  Get your prediction →
+                  Get your free prediction →
                 </Link>
-                <div
-                  style={{
-                    marginTop: '0.7rem',
-                    fontSize: '0.7rem',
-                    textAlign: 'center',
-                    color: '#64748b',
-                  }}
-                >
-                  🔒 Secure payment via Razorpay
-                </div>
               </div>
             </ScrollReveal>
           </div>
